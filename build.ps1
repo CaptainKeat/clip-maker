@@ -22,4 +22,5 @@ if(-not $Incremental){$arguments += '--clean'}
 if($LASTEXITCODE -ne 0){throw 'Desktop build failed'}
 Copy-Item -LiteralPath (Join-Path $project 'README.md') -Destination (Join-Path $project 'dist/Clip Maker/README.md')
 Copy-Item -LiteralPath (Join-Path $project 'LICENSE') -Destination (Join-Path $project 'dist/Clip Maker/LICENSE')
+Copy-Item -LiteralPath (Join-Path $project 'assets/clipmaker.ico') -Destination (Join-Path $project 'dist/Clip Maker/clipmaker.ico')
 Copy-Item -LiteralPath (Join-Path $project 'Uninstall-Clip-Maker.ps1') -Destination (Join-Path $project 'dist/Clip Maker/Uninstall-Clip-Maker.ps1')

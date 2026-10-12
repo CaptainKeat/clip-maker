@@ -23,15 +23,17 @@ if(Test-Path -LiteralPath $target){Move-Item -LiteralPath $target -Destination $
 try{Copy-Item -LiteralPath $payload -Destination $target -Recurse}
 catch{if(-not (Test-Path -LiteralPath $target) -and (Test-Path -LiteralPath $backup)){Move-Item -LiteralPath $backup -Destination $target};throw}
 $shell=New-Object -ComObject WScript.Shell
+$shortcutIcon=Join-Path $target 'clipmaker.ico'
+if(-not (Test-Path -LiteralPath $shortcutIcon)){$shortcutIcon=Join-Path $target 'Clip Maker.exe'}
 foreach($folder in @([Environment]::GetFolderPath('Desktop'),[Environment]::GetFolderPath('Programs'))){
     $shortcut=$shell.CreateShortcut((Join-Path $folder 'Clip Maker.lnk'))
     $shortcut.TargetPath=Join-Path $target 'Clip Maker.exe';$shortcut.WorkingDirectory=$target
-    $shortcut.IconLocation=(Join-Path $target 'Clip Maker.exe')+',0';$shortcut.Save()
+    $shortcut.IconLocation=$shortcutIcon+',0';$shortcut.Save()
 }
 $key='HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\ClipMaker'
 New-Item -Path $key -Force | Out-Null
 $uninstaller=Join-Path $target 'Uninstall-Clip-Maker.ps1'
-$values=@{DisplayName='Clip Maker';DisplayVersion=$packageVersion;Publisher='CaptainKeat';InstallLocation=$target;DisplayIcon=(Join-Path $target 'Clip Maker.exe');UninstallString='powershell.exe -NoProfile -ExecutionPolicy Bypass -File "'+$uninstaller+'"';NoModify=1;NoRepair=1}
+$values=@{DisplayName='Clip Maker';DisplayVersion=$packageVersion;Publisher='CaptainKeat';InstallLocation=$target;DisplayIcon=$shortcutIcon;UninstallString='powershell.exe -NoProfile -ExecutionPolicy Bypass -File "'+$uninstaller+'"';NoModify=1;NoRepair=1}
 foreach($name in $values.Keys){Set-ItemProperty -Path $key -Name $name -Value $values[$name]}
 Write-Output "Installed Clip Maker: $target"
 Write-Output "Installation files are preserved at $attempt"

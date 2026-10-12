@@ -397,12 +397,56 @@
   $("#studio-transcribe").onclick=()=>{const context=speechContext();if(context)window.ClipMakerConnections.transcribe(context).catch(e=>message(e.message,true));};
   $("#studio-transcript-last").onclick=()=>{const context=speechContext();if(context)window.ClipMakerConnections.review(context).catch(e=>message(e.message,true));};
   let speakerRun=null,speakerResult=null,speakerContext=null;
-  $('#studio-speakers').onclick=()=>{const c=selected();if(S.selection?.type!=='clips'||!c)return message('Select a video clip to scan its speakers.');if(speakerRun)return $('#speaker-dialog').showModal();speakerResult=null;speakerContext={project:S.project,clip:copy(c)};$('#speaker-track').innerHTML=asset(c.asset_id).metadata.audio_streams.map(t=>'<option value="'+t.ordinal+'">'+esc(t.title||'Track '+(t.ordinal+1))+'</option>').join('');$('#speaker-progress').textContent='Scan this edited video piece. Choose a clean microphone track when available.';$('#speaker-review').hidden=true;$('#speaker-start').disabled=!$('#speaker-track').options.length;$('#speaker-dialog').showModal();};
-  $('#speaker-close').onclick=()=>{if(speakerRun)return message('Cancel the scan before closing this review.');$('#speaker-dialog').close();};
+  const F=window.StudioEffects,EFFECT_DROP='application/x-clipmaker-effect';
+  function openSpeakers(selection=S.selection){
+    try{
+      if(S.tracking)throw new Error('Finish tracking before scanning audio.');
+      if(speakerRun){$('#speaker-dialog').showModal();return;}
+      const item=recipe()?.[selection?.type]?.[selection?.index],ordinal=selection?.type==='clips'?tools.waveOrdinals.get(item?.asset_id):null;
+      const target=F.target(recipe(),selection,ordinal),media=asset(target.item.asset_id);
+      if(!media?.metadata.audio_streams.length)throw new Error('This clip has no audio to scan.');
+      speakerResult=null;speakerContext={project:S.project,target};
+      $('#speaker-track').innerHTML=media.metadata.audio_streams.filter(t=>target.type==='clips'||t.ordinal===target.ordinal).map(t=>'<option value="'+t.ordinal+'">'+esc(t.title||'Track '+(t.ordinal+1))+'</option>').join('');
+      $('#speaker-track').value=String(target.ordinal);$('#speaker-source').textContent=media.name+' · '+(target.type==='clips'?'linked source audio':'audio clip')+' · '+fmt(target.time);
+      $('#speaker-progress').textContent='Scan this audio piece. Choose a clean microphone stream when available.';$('#speaker-review').hidden=true;$('#speaker-start').disabled=false;$('#speaker-dialog').showModal();
+    }catch(e){message(e.message,true);$('#studio-effect-status').textContent=e.message;}
+  }
+  $('#studio-speakers').onclick=()=>openSpeakers();$('#studio-effect-apply').onclick=()=>openSpeakers();
+  $('#studio-effect-search').oninput=e=>{$('[data-effect-id="speakers"]').hidden=!('split speakers wespeaker local audio scan splice'.includes(e.target.value.trim().toLowerCase()));};
+  function effectTarget(node){const piece=node?.closest('.timeline-piece');return piece&&!piece.dataset.effectCue&&(piece.classList.contains('source-audio')||piece.classList.contains('sound'))?piece:null;}
+  function clearEffectDrop(){document.querySelectorAll('.effect-drop-target').forEach(el=>el.classList.remove('effect-drop-target'));}
+  document.addEventListener('dragstart',e=>{const card=e.target.closest('[data-effect-id]');if(card){e.dataTransfer.setData(EFFECT_DROP,card.dataset.effectId);e.dataTransfer.effectAllowed='copy';}});
+  document.addEventListener('dragover',e=>{if(![...(e.dataTransfer?.types||[])].includes(EFFECT_DROP))return;e.preventDefault();clearEffectDrop();const piece=effectTarget(e.target);e.dataTransfer.dropEffect=piece?'copy':'none';piece?.classList.add('effect-drop-target');});
+  document.addEventListener('dragend',clearEffectDrop);
+  document.addEventListener('drop',e=>{if(e.dataTransfer?.getData(EFFECT_DROP)!=='speakers')return;e.preventDefault();clearEffectDrop();const piece=effectTarget(e.target);if(piece){select(piece.dataset.type,Number(piece.dataset.index));openSpeakers();}else message('Drop Split speakers onto an audio clip.',true);});
+  const card=$('[data-effect-id="speakers"]');let effectTouch=null;
+  card.onpointerdown=e=>{if(e.target.closest('button'))return;e.preventDefault();effectTouch={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false};card.setPointerCapture(e.pointerId);};
+  card.onpointermove=e=>{if(!effectTouch)return;if(Math.hypot(e.clientX-effectTouch.x,e.clientY-effectTouch.y)>8)effectTouch.moved=true;if(effectTouch.moved){e.preventDefault();clearEffectDrop();effectTarget(document.elementFromPoint(e.clientX,e.clientY))?.classList.add('effect-drop-target');}};
+  card.onpointerup=e=>{if(!effectTouch)return;const moved=effectTouch.moved;effectTouch=null;clearEffectDrop();if(moved){const piece=effectTarget(document.elementFromPoint(e.clientX,e.clientY));if(piece){select(piece.dataset.type,Number(piece.dataset.index));openSpeakers();}else message('Drop Split speakers onto an audio clip.',true);}};
+  card.onpointercancel=()=>{effectTouch=null;clearEffectDrop();};
+  $('#speaker-close').onclick=()=>{if(speakerRun)return message('Cancel the scan before closing this review.');$('#speaker-dialog').querySelectorAll('audio').forEach(a=>a.pause());$('#speaker-dialog').close();};
   $('#speaker-dialog').addEventListener('cancel',e=>{if(speakerRun)e.preventDefault();});
   $('#speaker-cancel').onclick=()=>{if(speakerRun)api('/studio/speakers/'+speakerRun.id+'/cancel',{}).catch(e=>message(e.message,true));};
-  $('#speaker-start').onclick=async()=>{if(speakerRun||!speakerContext)return;$('#speaker-start').disabled=true;$('#speaker-review').hidden=true;try{await save();speakerContext.clip=copy(recipe().clips.find(c=>c.id===speakerContext.clip.id));speakerContext.ordinal=Number($('#speaker-track').value);speakerRun=await api('/studio/projects/'+S.project.id+'/speakers',{clip_id:speakerContext.clip.id,audio_ordinal:speakerContext.ordinal,speakers:Number($('#speaker-count').value)});$('#speaker-cancel').hidden=false;for(;;){await new Promise(r=>setTimeout(r,700));const jobs=await api('/api/jobs'),job=jobs[speakerRun.job_id];$('#speaker-progress').textContent=job?.detail||'Scanning locally…';if(job?.status==='error')throw new Error(job.detail||job.error);if(job?.status==='complete')break;}speakerResult=await api('/studio/speakers/'+speakerRun.id);await refreshAssets();$('#speaker-tracks').innerHTML=speakerResult.tracks.map((track,i)=>'<div class="speaker-review-row"><input aria-label="Speaker track '+(i+1)+' name" data-speaker-name="'+i+'" maxlength="80" value="'+esc(track.name)+'"><audio controls preload="none" src="/studio/sound-preview/'+track.asset.id+'?start=0&ordinal=0" aria-label="Listen to '+esc(track.name)+'"></audio></div>').join('');$('#speaker-progress').textContent=speakerResult.tracks.length+' aligned tracks ready. Preview playback covers the first 90 seconds; full tracks are available in the timeline.';$('#speaker-review').hidden=false;}catch(e){$('#speaker-progress').textContent=e.message;}finally{speakerRun=null;$('#speaker-cancel').hidden=true;$('#speaker-start').disabled=false;}};
-  $('#speaker-apply').onclick=async()=>{if(!speakerResult||!speakerContext)return;const c=recipe()?.clips.find(c=>c.id===speakerContext.clip.id);if(S.project!==speakerContext.project||!c||JSON.stringify(c)!==JSON.stringify(speakerContext.clip))return message('The source clip changed after scanning. Scan it again before adding these tracks.',true);snapshot();const sourceKey=c.id+"/"+speakerContext.ordinal;recipe().sounds=recipe().sounds.filter(s=>s.speaker_source!==sourceKey);const cursor=recipe().clips.slice(0,recipe().clips.indexOf(c)).reduce((n,c)=>n+duration(c),0),mix=c.audio.find(a=>a.ordinal===speakerContext.ordinal);for(const [i,track]of speakerResult.tracks.entries()){const name=$('[data-speaker-name="'+i+'"]').value.trim()||track.name;recipe().sounds.push({id:crypto.randomUUID(),asset_id:track.asset.id,time:cursor,duration:Math.min((c.end-c.start)/c.speed,speakerResult.duration),source_start:0,gain_db:mix?.gain_db||0,audio_ordinal:0,role:track.name.startsWith('Speaker')?'dialogue':'other',name,lane:name,speaker_source:sourceKey,fade_in:c.audio_fade_in||0,fade_out:c.audio_fade_out||0});}if(mix)mix.enabled=false;for(const [key]of S.proxy)if(key.startsWith(c.asset_id+'/'))S.proxy.delete(key);S.selection={type:'sounds',index:recipe().sounds.length-speakerResult.tracks.length};change();timeline();inspector();seek(cursor);$('#speaker-dialog').querySelectorAll('audio').forEach(a=>a.pause());$('#speaker-dialog').close();speakerResult=null;await save();message('Speaker tracks added. The chosen source track is muted on this piece; Undo restores it.');};
+  $('#speaker-start').onclick=async()=>{
+    if(speakerRun||!speakerContext)return;$('#speaker-start').disabled=true;$('#speaker-review').hidden=true;
+    try{
+      await save();const target=speakerContext.target,current=recipe()?.[target.type]?.find(c=>c.id===target.id);if(!current||JSON.stringify(current)!==JSON.stringify(target.item))throw new Error('The source clip changed. Close this review and choose it again.');
+      target.ordinal=Number($('#speaker-track').value);target.key=(target.type==='sounds'?'sound:':'')+target.id+'/'+target.ordinal;
+      speakerRun=await api('/studio/projects/'+S.project.id+'/speakers',{clip_id:target.id,target_type:target.type,audio_ordinal:target.ordinal,speakers:Number($('#speaker-count').value)});$('#speaker-cancel').hidden=false;
+      for(;;){await new Promise(r=>setTimeout(r,700));const jobs=await api('/api/jobs'),job=jobs[speakerRun.job_id];$('#speaker-progress').textContent=job?.detail||'Scanning locally…';if(job?.status==='error')throw new Error(job.detail||job.error);if(job?.status==='complete')break;}
+      speakerResult=await api('/studio/speakers/'+speakerRun.id);await refreshAssets();
+      $('#speaker-tracks').innerHTML=speakerResult.tracks.map((track,i)=>'<div class="speaker-review-row"><input aria-label="Speaker track '+(i+1)+' name" data-speaker-name="'+i+'" maxlength="80" value="'+esc(track.name)+'"><audio controls preload="none" src="/studio/sound-preview/'+track.asset.id+'?start=0&ordinal=0" aria-label="Listen to '+esc(track.name)+'"></audio></div>').join('');
+      $('#speaker-progress').textContent=speakerResult.tracks.length+' tracks ready. '+speakerResult.regions.length+' speaker turns including background and overlap. Review names and choose an output layout.';$('#speaker-review').hidden=false;
+    }catch(e){$('#speaker-progress').textContent=e.message;}finally{speakerRun=null;$('#speaker-cancel').hidden=true;$('#speaker-start').disabled=false;}
+  };
+  $('#speaker-apply').onclick=async()=>{
+    try{
+      if(!speakerResult||!speakerContext||S.project!==speakerContext.project)throw new Error('Reopen the source project before applying this scan.');
+      const names=[...document.querySelectorAll('[data-speaker-name]')].map(input=>input.value),result=F.apply(recipe(),speakerContext.target,speakerResult,names,$('#speaker-layout').value);
+      E.assertUnlocked(recipe(),result.recipe);snapshot();S.project.recipe=result.recipe;expandGroup('audio');for(const [key]of S.proxy)if(key.startsWith(speakerContext.target.item.asset_id+'/'))S.proxy.delete(key);
+      S.selection={type:'sounds',index:result.index};change();timeline();inspector();seek(result.time);$('#speaker-dialog').querySelectorAll('audio').forEach(a=>a.pause());$('#speaker-dialog').close();speakerResult=null;await save();message(result.count+' speaker audio pieces added. Undo restores the original audio.');
+    }catch(e){$('#speaker-progress').textContent=e.message;}
+  };
   $('#studio-marker-label').onchange=e=>{if(S.selection?.type!=='markers')return;snapshot();selected().label=e.target.value.trim()||'Bookmark';change();timeline();};
   $('#studio-marker-time').onchange=e=>{if(S.selection?.type!=='markers')return;snapshot();selected().time=clamp(Number(e.target.value)||0,0,total());change();timeline();seek(selected().time);};
   $('#studio-layer-label').onchange=e=>{if(S.selection?.type!=='sounds')return;snapshot();selected().name=e.target.value.trim();if(selected().lane)selected().lane=selected().name;change();timeline();};
@@ -420,5 +464,7 @@
     insert:(a,start,end,ordinal=0)=>{if(a.kind==='video'){const item={id:crypto.randomUUID(),asset_id:a.id,start,end,speed:1,freeze:0,transition:'none',fit:'fit',audio:a.metadata.audio_streams.map(t=>({ordinal:t.ordinal,enabled:t.ordinal===ordinal,gain_db:0}))};const result=E.paste(recipe(),{type:'clips',item,layers:{}},S.time,ripple());snapshot();S.selection={type:'clips',index:result.index};result.recipe.editing={...result.recipe.editing,track_groups:{...result.recipe.editing?.track_groups,video:false,audio:false}};edited(result.recipe);}
       else{if(total()-S.time<.04)throw new Error('Move the playhead before the end of a video.');snapshot();expandGroup('audio');recipe().sounds.push({id:crypto.randomUUID(),asset_id:a.id,time:S.time,source_start:start,duration:Math.min(end-start,total()-S.time),audio_ordinal:ordinal,gain_db:0});S.selection={type:'sounds',index:recipe().sounds.length-1};change();timeline();inspector();}message('Source range inserted.');}
   });
+  window.StudioHandheld({time:()=>S.time,seek:t=>seek(clamp(t,0,total())),layout:()=>workspace?.resize()});
   Promise.all([refreshAssets(),settings()]).then(async()=>{await loadProjects();const id=new URLSearchParams(location.search).get("project");if(id)await open(id);window.studioReady=true;}).catch(e=>{window.studioError=e.message;message(e.message,true);});
 })();
+

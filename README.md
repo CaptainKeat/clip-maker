@@ -4,7 +4,7 @@ A Windows video editor for clips, VODs and longer videos. Manual editing works w
 
 ## Install
 
-Download `Clip-Maker-v1.3.1-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
+Download `Clip-Maker-v1.4.0-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Clip-Maker.ps1
@@ -119,3 +119,15 @@ Track headers offer Mute (M) and Solo (S) for linked source audio and each sound
 Choose Preview on a video or audio in Sources to open the separate source monitor. Choose its audio stream, scrub or play it, set source In/Out numerically or with I/O buttons, and Insert range at the timeline playhead. Inserting video splits the destination clip and follows Ripple layers; audio ranges become sound layers. Source playback pauses timeline playback. Source points are independent of the timeline range marks.
 
 The Bookmarks tab searches names and timestamps, jumps to a result, and offers previous/next navigation. Select a bookmark to rename it or adjust its timeline time. Bookmarks keep their timing through ripple edits and source-range insertion.
+
+### Effects and handheld editing
+
+Open **Effects** beside Sources and Bookmarks. Search for **Split speakers**, drag it onto linked source audio or an added audio clip, or select the clip and press **Apply to selected audio**. Choose its stream and speaker count, scan locally, review names, then add **Spliced speaker turns** or **Aligned full-length tracks**. Spliced turns become individual timed clips in speaker lanes. Background and overlaps remain available. This is diarization and routing of the original mix; it does not isolate simultaneous voices from each other. Scan cancellation leaves the edit unchanged. Applying replaces only the selected audio piece or mutes the chosen linked stream, and Undo restores it. Locked tracks and changed-source scans are protected. An edit supports up to 100 sound pieces; choose aligned tracks for scans with too many turns.
+
+Settings > General > **Handheld & touch** selects Automatic, Handheld, or Desktop layout. Automatic uses the compact workspace on small landscape windows and coarse-pointer screens. Sources, Effects and Inspector open as side panels; **Audio focus** shows audio tracks while retaining the complete edit. Touch controls provide 5-second seek and timeline zoom, and track headers have larger controls. Layout choice and optional controller navigation stay local to each device. Windows can resize the installed app to 800 × 480; 960 × 540 and 1280 × 720 are representative views for scaled handheld displays.
+
+Optional **Controller navigation** supports a standard browser gamepad while the app is focused: D-pad/left stick moves focus, A presses a focused button or checkbox, X toggles playback, LB/RB seeks five seconds, and B closes a side panel. Text and dropdown choices remain available through touch. Physical Ally controller mapping and performance require device testing; these controls do not operate other Windows applications. Close review dialogs through their controls; a running scan must be cancelled first.
+
+The Windows package includes a standalone multiresolution icon. The installer uses it for desktop/Start shortcuts and Installed Apps, and the desktop sets its application icon and Windows taskbar identity. On launch, a packaged app refreshes only existing Clip Maker shortcuts that point to that exact executable, so updates can repair old icons without recreating unrelated shortcuts.
+
+The Effects workflow is informed by [Adobe's documented clip-effect workflow](https://helpx.adobe.com/uk/premiere/desktop/add-video-effects/apply-video-effects/apply-effects.html) and inspected workspace declarations. Clip Maker uses its own source and rendering pipeline. Premiere's native Mercury implementation has not been recovered; REA native analysis requires a configured deep-analysis provider.

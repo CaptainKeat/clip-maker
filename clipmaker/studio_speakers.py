@@ -41,14 +41,22 @@ def cancel(settings,identity):
     if path.is_dir():(path/'cancel').touch()
 
 
-def scan(settings,project_id,clip_id,ordinal,speakers,identity,progress=None):
+def source_target(project,target_id,target_type='clips'):
+    if target_type not in {'clips','sounds'}:raise ValueError('Choose a video or audio clip')
+    item=next((c for c in project['recipe'][target_type] if c['id']==target_id),None)
+    if not item:raise ValueError('The selected audio clip is unavailable')
+    if target_type=='clips':return item
+    return {**item,'start':item.get('source_start',0),'end':item.get('source_start',0)+item['duration'],'speed':1}
+
+
+def scan(settings,project_id,clip_id,ordinal,speakers,identity,target_type='clips',progress=None):
     root=folder(settings,identity);process=None
     try:
         root.mkdir(parents=True,exist_ok=False);p=studio.project(settings,project_id)
         with LOCK:
             if identity in CANCELLED:(root/'cancel').touch()
-        clip=next(c for c in p['recipe']['clips'] if c['id']==clip_id);media=studio.asset(settings,clip['asset_id'])
-        cfg={'id':identity,'project_id':project_id,'revision':p['revision'],'clip':clip,'ordinal':ordinal,'speakers':speakers,
+        clip=source_target(p,clip_id,target_type);media=studio.asset(settings,clip['asset_id'])
+        cfg={'id':identity,'project_id':project_id,'revision':p['revision'],'clip':clip,'target_type':target_type,'ordinal':ordinal,'speakers':speakers,
             'source':media['path'],'start':clip['start'],'end':clip['end'],'speed':clip['speed'],'ffmpeg':settings.ffmpeg}
         config=root/'config.json';config.write_text(json.dumps(cfg),encoding='utf-8')
         command=[sys.executable,'--speaker-worker',str(config)] if getattr(sys,'frozen',False) else [sys.executable,'-m','clipmaker.speaker_audio',str(config)]

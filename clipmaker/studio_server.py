@@ -123,11 +123,12 @@ def post(handler, parsed, start_job, jobs, jobs_lock):
         import uuid
         from dataclasses import replace
         p=studio.project(settings,m[1]);clip_id=str(body.get('clip_id',''));ordinal=int(body.get('audio_ordinal',0));count=int(body.get('speakers',0))
-        clip=next((c for c in p['recipe']['clips'] if c['id']==clip_id),None)
+        target_type=body.get('target_type','clips')
+        clip=studio_speakers.source_target(p,clip_id,target_type)
         if not clip or ordinal not in {a['ordinal'] for a in studio.asset(settings,clip['asset_id'])['metadata']['audio_streams']} or not 0<=count<=8:raise ValueError('Choose a clip, audio source and zero to eight speakers')
         if not studio_speakers.status()['available']:raise ValueError('Bundled speaker models are unavailable')
         identity=uuid.uuid4().hex;studio_speakers.reserve(m[1],identity)
-        start_job('studio-speakers-'+identity,studio_speakers.scan,replace(settings),m[1],clip_id,ordinal,count,identity)
+        start_job('studio-speakers-'+identity,studio_speakers.scan,replace(settings),m[1],clip_id,ordinal,count,identity,target_type)
         handler._json({'id':identity,'job_id':'studio-speakers-'+identity})
     elif (m:=re.fullmatch(r'/studio/speakers/([a-f0-9]{32})/cancel',path)):
         studio_speakers.cancel(settings,m[1]);handler._json({'cancelled':True})

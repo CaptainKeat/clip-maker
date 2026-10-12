@@ -463,8 +463,10 @@ class ClipMakerHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         if parsed.path == "/":
             self._serve_file(STATIC_DIR / "studio.html")
-        elif parsed.path in {"/studio.js","/studio.css","/studio-connectors.js","/studio-editing.js","/studio-workspace.js"}:
+        elif parsed.path in {"/studio.js","/studio.css","/studio-connectors.js","/studio-editing.js","/studio-workspace.js","/studio-effects.js","/studio-handheld.js"}:
             self._serve_file(STATIC_DIR / parsed.path[1:])
+        elif parsed.path == '/clipmaker.ico':
+            self._serve_file(Path(getattr(__import__('sys'),'_MEIPASS',Path(__file__).resolve().parent.parent))/'assets'/'clipmaker.ico')
         elif parsed.path.startswith("/studio/"):
             try:
                 if not studio_server.get(self,parsed): self.send_error(HTTPStatus.NOT_FOUND)

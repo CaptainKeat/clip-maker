@@ -1,0 +1,15 @@
+const assert=require('node:assert/strict'),F=require('../clipmaker/static/studio-effects.js'),E=require('../clipmaker/static/studio-editing.js');
+const clip={id:'video-a',asset_id:1,start:2,end:10,speed:2,freeze:1,audio:[{ordinal:0,enabled:true,gain_db:-3}]};
+const sound={id:'sound-a',asset_id:2,time:1,duration:4,source_start:7,audio_ordinal:1,gain_db:-6,lane:'Music'};
+const r={clips:[clip],sounds:[sound],captions:[],overlays:[],markers:[],editing:{tracks:{}}};
+const scan={duration:4,regions:[{start:0,end:1,speaker:'Background'},{start:1,end:2,speaker:'Speaker 1'},{start:2,end:4,speaker:'Overlap'}],tracks:[{name:'Background',asset:{id:11}},{name:'Speaker 1',asset:{id:12}},{name:'Overlap',asset:{id:13}}]};
+let id=0;const next=()=>String(++id),before=JSON.stringify(r);
+const c=F.target(r,{type:'clips',index:0},0),out=F.apply(r,c,scan,['Background','Alice','Overlap'],'turns',next);
+assert.equal(JSON.stringify(r),before);assert.equal(out.recipe.sounds.length,4);assert.equal(out.recipe.clips[0].audio[0].enabled,false);assert.deepEqual(out.recipe.sounds.slice(1).map(s=>[s.time,s.source_start,s.duration,s.gain_db]),[[0,0,1,-3],[1,1,1,-3],[2,2,2,-3]]);
+const a=F.target(r,{type:'sounds',index:0}),audio=F.apply(r,a,scan,[],'turns',next);
+assert.equal(a.ordinal,1);assert.equal(audio.recipe.sounds.length,3);assert.deepEqual(audio.recipe.sounds.map(s=>[s.time,s.source_start,s.duration,s.gain_db]),[[1,0,1,-6],[2,1,1,-6],[3,2,2,-6]]);assert.deepEqual(audio.recipe.clips,r.clips);
+const aligned=F.apply(r,a,scan,[],'aligned',next);assert.ok(aligned.recipe.sounds.every(s=>s.time===1&&s.duration===4&&s.source_start===0));
+const moved=E.clone(r);moved.sounds[0].time=2;assert.throws(()=>F.apply(moved,a,scan,[]),/changed after scanning/);
+const locked=E.clone(r);locked.editing.tracks['sound:Music']={locked:true};assert.throws(()=>E.assertUnlocked(locked,F.apply(locked,F.target(locked,{type:'sounds',index:0}),scan,[],'turns',next).recipe),/locked/i);
+const many={...scan,regions:Array.from({length:101},(_,i)=>({start:i/30,end:(i+2)/30,speaker:'Speaker 1'}))};assert.throws(()=>F.apply(r,c,many,[],'turns',next),/100 audio pieces/);
+console.log('Speaker splice timing, gains, source replacement, aligned layout, stale scan and locked-track checks passed.');

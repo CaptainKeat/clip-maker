@@ -8,7 +8,8 @@
     const editor=$('#studio-editor');
     function resize(){
       if(editor.hidden||!editor.clientHeight)return;const width=$('.editor-columns').clientWidth, height=editor.clientHeight;
-      sizes.timeline=clamp(Number(sizes.timeline)||390,180,Math.max(180,height-160));
+      const handheld=document.body.classList.contains('handheld');
+      sizes.timeline=clamp(Number(sizes.timeline)||390,180,Math.max(180,handheld?Math.floor(height*.42):height-160));
       sizes.bin=clamp(Number(sizes.bin)||250,150,Math.max(150,width-430));
       sizes.inspector=clamp(Number(sizes.inspector)||260,180,Math.max(180,width-sizes.bin-180));
       editor.style.setProperty('--timeline-size',sizes.timeline+'px');editor.style.setProperty('--bin-size',sizes.bin+'px');editor.style.setProperty('--inspector-size',sizes.inspector+'px');
@@ -25,8 +26,8 @@
     }
     $('#studio-layout-reset').onclick=()=>{sizes={timeline:390,bin:250,inspector:260};resize();remember();};
     new ResizeObserver(resize).observe(editor);
-    function tab(bookmarks){$('.media-bin').scrollTop=0;$('#studio-bookmark-list').hidden=!bookmarks;$('#studio-bin-list').hidden=bookmarks;$('#studio-source-monitor').hidden=bookmarks||!source;$('#studio-sources-tab').setAttribute('aria-pressed',!bookmarks);$('#studio-bookmarks-tab').setAttribute('aria-pressed',bookmarks);if(bookmarks){pause();refresh();}}
-    $('#studio-sources-tab').onclick=()=>tab(false);$('#studio-bookmarks-tab').onclick=()=>tab(true);
+    function tab(bookmarks){$('#studio-effects-library').hidden=true;$('#studio-effects-tab').setAttribute('aria-pressed','false');$('.media-bin').scrollTop=0;$('#studio-bookmark-list').hidden=!bookmarks;$('#studio-bin-list').hidden=bookmarks;$('#studio-source-monitor').hidden=bookmarks||!source;$('#studio-sources-tab').setAttribute('aria-pressed',!bookmarks);$('#studio-bookmarks-tab').setAttribute('aria-pressed',bookmarks);if(bookmarks){pause();refresh();}}
+    $('#studio-sources-tab').onclick=()=>tab(false);$('#studio-bookmarks-tab').onclick=()=>tab(true);$('#studio-effects-tab').onclick=()=>{pause();$('#studio-effects-library').hidden=false;for(const id of ['studio-bin-list','studio-source-monitor','studio-bookmark-list'])$('#'+id).hidden=true;for(const id of ['studio-sources-tab','studio-bookmarks-tab'])$('#'+id).setAttribute('aria-pressed','false');$('#studio-effects-tab').setAttribute('aria-pressed','true');};
     function refresh(){
       const r=ctx.recipe();if(!r)return;const term=$('#studio-bookmark-search').value.toLowerCase();
       $('#studio-bookmark-results').innerHTML=r.markers.map((m,index)=>({...m,index})).filter(m=>(m.label+' '+ctx.fmt(m.time)).toLowerCase().includes(term)).sort((a,b)=>a.time-b.time).map(m=>'<button class="bookmark-result secondary" data-bookmark-jump="'+m.index+'"><time>'+ctx.fmt(m.time)+'</time><span>'+esc(m.label||'Bookmark')+'</span></button>').join('')||'<p class="muted small">No matching bookmarks.</p>';

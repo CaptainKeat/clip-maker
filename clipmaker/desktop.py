@@ -38,8 +38,17 @@ def main():
         executable = bundle/"media-tools"/(name+".exe")
         if executable.exists(): setattr(settings,name,str(executable))
     settings.host="127.0.0.1";settings.tailscale_host=""
+    if sys.platform=='win32':
+        import ctypes
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('CaptainKeat.ClipMaker')
     app = QApplication(sys.argv)
     app.setApplicationName("Clip Maker");app.setOrganizationName("ClipMaker")
+    app_icon=QIcon(str(bundle/'assets'/'clipmaker.ico'))
+    app.setWindowIcon(app_icon)
+    if sys.platform=='win32' and getattr(sys,'frozen',False):
+        from .desktop_icons import repair
+        try:repair(sys.executable,data_root)
+        except OSError:logging.exception('Could not refresh application shortcuts')
     lock = QLockFile(str(data_root/"desktop.lock"));lock.setStaleLockTime(0)
     if not lock.tryLock(100):
         QMessageBox.information(None,"Clip Maker","Clip Maker is already running.")
@@ -127,7 +136,7 @@ def main():
             server.shutdown();server.server_close();lock.unlock()
             event.accept()
 
-    window = Window();window.setWindowTitle("Clip Maker");window.resize(1440,920);window.setMinimumSize(920,650)
+    window = Window();window.setWindowTitle("Clip Maker");window.resize(1440,920);window.setMinimumSize(800,480)
     icon = bundle/"assets"/"clipmaker.ico"
     if icon.exists(): window.setWindowIcon(QIcon(str(icon)))
     view = QWebEngineView(window)

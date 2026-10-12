@@ -1,8 +1,16 @@
 import unittest
 from clipmaker.speaker_audio import partition
+from clipmaker.studio_speakers import source_target
 
 
 class SpeakerRoutingTests(unittest.TestCase):
+    def test_audio_layer_scan_uses_its_original_trim(self):
+        p={'recipe':{'clips':[],'sounds':[{'id':'a','asset_id':4,'time':12,'source_start':7,'duration':3}]}}
+        item=source_target(p,'a','sounds')
+        self.assertEqual((item['start'],item['end'],item['speed']),(7,10,1))
+        self.assertNotIn('start',p['recipe']['sounds'][0])
+        with self.assertRaises(ValueError):source_target(p,'missing','sounds')
+        with self.assertRaises(ValueError):source_target(p,'a','captions')
     def test_overlap_and_gaps_are_exclusive_and_cover_the_source(self):
         regions=partition([{'start':1,'end':4,'speaker':'Speaker 1'},
                            {'start':3,'end':5,'speaker':'Speaker 2'}],6)
