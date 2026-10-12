@@ -1,11 +1,11 @@
-param([string]$Python="python")
+param([string]$Python="python",[switch]$Incremental)
 $ErrorActionPreference="Stop"
 $project = $PSScriptRoot
 Set-Location -LiteralPath $project
 $env:PYTHONPATH=Join-Path $project 'vendor'
 $pythonExe=(Get-Command $Python).Source
 $env:PATH=(Split-Path -Parent $pythonExe)+';'+(Join-Path $env:SystemRoot 'System32')+';'+$env:SystemRoot
-$arguments=@('-m','PyInstaller','--noconfirm','--clean','--onedir','--windowed','--name','Clip Maker',
+$arguments=@('-m','PyInstaller','--noconfirm','--onedir','--windowed','--name','Clip Maker',
     '--paths',(Join-Path $project 'vendor'),'--icon',(Join-Path $project 'assets/clipmaker.ico'),
     '--add-data','clipmaker/static;clipmaker/static','--add-data','assets;assets',
     '--add-data','third_party/qt;third_party/qt','--add-data','third_party/python;third_party/python',
@@ -17,6 +17,7 @@ foreach($module in @('torch','transformers','onnx_asr','onnxruntime','scipy','ma
     $arguments += @('--exclude-module',$module)
 }
 $arguments += 'desktop_app.py'
+if(-not $Incremental){$arguments += '--clean'}
 & $pythonExe @arguments
 if($LASTEXITCODE -ne 0){throw 'Desktop build failed'}
 Copy-Item -LiteralPath (Join-Path $project 'README.md') -Destination (Join-Path $project 'dist/Clip Maker/README.md')

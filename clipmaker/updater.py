@@ -250,7 +250,7 @@ try {
         }
         throw
     }
-    $newApp = Start-Process -FilePath (Join-Path $Target "Clip Maker.exe") -WindowStyle Hidden -PassThru
+    $newApp = Start-Process -FilePath (Join-Path $Target "Clip Maker.exe") -WindowStyle Normal -PassThru
     $deadline = (Get-Date).AddSeconds(40)
     $booted = $false
     while ((Get-Date) -lt $deadline) {
@@ -296,7 +296,7 @@ try {
         ConvertTo-Json | Set-Content -LiteralPath $Receipt -Encoding UTF8
     if (-not (Get-Process -Id $ParentPid -ErrorAction SilentlyContinue) -and
         (Test-Path -LiteralPath (Join-Path $Target "Clip Maker.exe"))) {
-        Start-Process -FilePath (Join-Path $Target "Clip Maker.exe") -WindowStyle Hidden
+        Start-Process -FilePath (Join-Path $Target "Clip Maker.exe") -WindowStyle Normal
     }
     exit 1
 }

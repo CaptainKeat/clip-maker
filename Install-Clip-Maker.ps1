@@ -26,4 +26,4 @@ $values=@{DisplayName='Clip Maker';DisplayVersion='1.0.0';Publisher='CaptainKeat
 foreach($name in $values.Keys){Set-ItemProperty -Path $key -Name $name -Value $values[$name]}
 Write-Output "Installed Clip Maker: $target"
 Write-Output "Installation files are preserved at $attempt"
-if(-not $NoLaunch){Start-Process -FilePath (Join-Path $target 'Clip Maker.exe') -WindowStyle Hidden}
+if(-not $NoLaunch){Start-Process -FilePath (Join-Path $target 'Clip Maker.exe') -WindowStyle Normal}
