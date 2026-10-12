@@ -1,7 +1,7 @@
 (() => {
   "use strict";
   const $=s=>document.querySelector(s), M=window.MotionCaptions;
-  const S={assets:[],projects:[],project:null,time:0,selection:null,history:[],future:[],dirty:0,saved:0,saveTimer:null,saving:null,zoom:10,playing:false,proxy:new Map(),job:null,tracking:false,picking:false,box:null,drag:null,loadedClip:null,loadedUrl:null,seekGeneration:0,soundNodes:new Map(),overlayNodes:new Map(),buildingProxy:false};
+  const S={assets:[],projects:[],project:null,time:0,selection:null,history:[],future:[],dirty:0,saved:0,saveTimer:null,saving:null,zoom:10,playing:false,proxy:new Map(),job:null,tracking:false,picking:false,box:null,drag:null,loadedClip:null,loadedUrl:null,seekGeneration:0,soundNodes:new Map(),overlayNodes:new Map(),captionNodes:new Map(),buildingProxy:false};
   const copy=v=>JSON.parse(JSON.stringify(v));
   const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
@@ -78,10 +78,16 @@
   function draw(){
     if(!S.project||$("#studio-editor").hidden)return;
     layout();const stage=$("#studio-stage"),width=stage.clientWidth,[w]=frame();
-    $("#studio-caption-layer").innerHTML=recipe().captions.map((c,i)=>({c,i})).filter(({c})=>S.time>=c.start&&S.time<c.end).map(({c,i})=>{
-      const m={...M.defaults(),x:50,y:85,...(c.motion||{})},p=M.pose(m,S.time,c.start,c.end),selected_=S.selection?.type==="captions"&&S.selection.index===i;
-      return '<button class="studio-caption'+(selected_?' selected':'')+'" data-caption="'+i+'" style="left:'+p.x+'%;top:'+p.y+'%;font-size:'+(64*p.size*width/1080)+'px;color:'+m.color+';transform:translate(-50%,-50%) rotate('+p.rotation+'deg)" aria-label="Move caption: '+esc(c.text)+'">'+esc(c.text)+'</button>';
-    }).join("");
+    const activeCaptions=new Set();
+    recipe().captions.forEach((c,i)=>{
+      if(S.time<c.start||S.time>=c.end)return;const id=c.id||String(i);activeCaptions.add(id);
+      let node=S.captionNodes.get(id);if(!node){node=document.createElement("button");node.className="studio-caption";$("#studio-caption-layer").append(node);S.captionNodes.set(id,node);}
+      const m={...M.defaults(),x:50,y:85,...(c.motion||{})},p=M.pose(m,S.time,c.start,c.end);
+      node.dataset.caption=i;if(node.textContent!==c.text)node.textContent=c.text;
+      node.setAttribute("aria-label","Move caption: "+c.text);node.classList.toggle("selected",S.selection?.type==="captions"&&S.selection.index===i);
+      Object.assign(node.style,{left:p.x+"%",top:p.y+"%",fontSize:(64*p.size*width/1080)+"px",color:m.color,transform:"translate(-50%,-50%) rotate("+p.rotation+"deg)"});
+    });
+    for(const [id,node]of S.captionNodes)if(!activeCaptions.has(id)){node.remove();S.captionNodes.delete(id);}
     const activeOverlays=new Set();
     for(const o of recipe().overlays){if(S.time<o.time||S.time>=o.time+o.duration)continue;activeOverlays.add(o.id);let node=S.overlayNodes.get(o.id);const a=asset(o.asset_id);if(!node){node=document.createElement(a.kind==="image"?"img":"video");node.src=a.kind==="video"?"/studio/overlay-preview/"+a.id:a.url;if(a.kind==="video"){node.muted=true;node.loop=true;}$("#studio-overlay-layer").append(node);S.overlayNodes.set(o.id,node);}Object.assign(node.style,{position:"absolute",left:o.x+"%",top:o.y+"%",width:o.size*100+"%",transform:"translate(-50%,-50%)"});if(a.kind==="video"){const t=(S.time-o.time)%a.metadata.duration_sec,left=Math.floor(t/60)*60,url="/studio/overlay-preview/"+a.id+"?start="+left;if(node.dataset.source!==url){node.dataset.source=url;node.src=url;}if(node.readyState>=2&&Math.abs(node.currentTime-(t-left))>.15)node.currentTime=t-left;if(S.playing&&node.paused)node.play().catch(()=>{});if(!S.playing)node.pause();}}
     for(const [id,node]of S.overlayNodes)if(!activeOverlays.has(id)){if(node.pause)node.pause();node.remove();S.overlayNodes.delete(id);}
