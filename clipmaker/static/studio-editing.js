@@ -82,6 +82,17 @@
   function envelope(item,age,length,prefix=''){const a=Math.min(item[prefix+'fade_in']||0,length/2),b=Math.min(item[prefix+'fade_out']||0,length/2);return clamp(Math.min(a?age/a:1,b?(length-age)/b:1),0,1);}
   function crossfade(recipe,index,seconds){const r=clone(recipe),current=r.sounds[index];if(!current)throw new Error('Select a soundtrack.');const next=r.sounds.filter(s=>s!==current&&s.time>=current.time).sort((a,b)=>a.time-b.time)[0];if(!next)throw new Error('Add a following soundtrack first.');const f=clamp(seconds,.033,Math.min(current.duration/2,next.duration/2));current.fade_out=f;next.fade_in=f;next.time=current.time+current.duration-f;return r;}
   function style(c,preset){const m=clone(c.motion||{enabled:true,x:50,y:85,keyframes:[]});for(const k of ['color','font','bold','size','rotation','effect'])m[k]=preset.motion[k];c.motion=m;c.speaker=preset.speaker||c.speaker||'';return c;}
-  const api={clone,duration,total,cutRange,trim,copySelection,paste,snap,envelope,crossfade,style,position};
+  const track=(r,key)=>r.editing?.tracks?.[key]||{};
+  const soundKey=s=>'sound:'+(s.lane||'Audio');
+  function audible(r,key){const tracks=r.editing?.tracks||{},active=new Set(['audio',...r.sounds.map(soundKey)]),solo=Object.entries(tracks).some(([k,v])=>active.has(k)&&v.solo);return !track(r,key).muted&&(!solo||!!track(r,key).solo);}
+  function assertUnlocked(before,after){
+    const different=(a,b)=>JSON.stringify(a)!==JSON.stringify(b);
+    for(const [key,state]of Object.entries(before.editing?.tracks||{})){
+      if(!state.locked)continue;
+      const items=r=>key==='video'?r.clips:key==='audio'?r.clips.map(c=>[c.id,c.start,c.end,c.speed,c.freeze||0,c.audio,c.audio_fade_in||0,c.audio_fade_out||0]):key.startsWith('sound:')?r.sounds.filter(c=>soundKey(c)===key):r[key]||[];
+      if(different(items(before),items(after))){const error=new Error('Unlock '+(key.startsWith('sound:')?key.slice(6):key)+' before editing it. Ripple edits cannot move a locked track.');error.name='TrackLockedError';throw error;}
+    }
+  }
+  const api={clone,duration,total,cutRange,trim,copySelection,paste,snap,envelope,crossfade,style,position,track,soundKey,audible,assertUnlocked};
   if(typeof module!=='undefined')module.exports=api;root.StudioEditing=api;
 })(typeof window!=='undefined'?window:globalThis);

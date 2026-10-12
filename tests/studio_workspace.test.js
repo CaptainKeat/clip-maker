@@ -1,0 +1,16 @@
+const assert = require('node:assert/strict');
+const E = require('../clipmaker/static/studio-editing.js');
+const recipe = {clips:[{id:'c',asset_id:1,start:0,end:10,speed:1,audio:[{ordinal:0,enabled:true}]}],captions:[{id:'cap',text:'hi',start:5,end:7}],overlays:[],sounds:[{id:'s',lane:'Voice',time:5,duration:2}],markers:[{label:'Hit',time:6}],editing:{tracks:{'sound:Voice':{locked:true}}}};
+const trimmed=E.trim(recipe,0,2,10,1,0,true);
+assert.throws(()=>E.assertUnlocked(recipe,trimmed),/locked track/);
+const changed=E.clone(recipe); changed.clips[0].fit='fill'; E.assertUnlocked(recipe,changed);
+const inserted=E.paste(recipe,{type:'clips',item:{...recipe.clips[0],start:2,end:4},layers:{}},3,true);
+assert.throws(()=>E.assertUnlocked(recipe,inserted.recipe),/locked track/);
+recipe.editing.tracks={audio:{locked:true}};assert.throws(()=>E.assertUnlocked(recipe,E.trim(recipe,0,2,10,1,0,true)),/Unlock audio/);
+recipe.editing.tracks={};
+const range=E.paste(recipe,{type:'clips',item:{...recipe.clips[0],start:2,end:4},layers:{}},3,true).recipe;
+assert.equal(E.total(range),12);assert.equal(range.clips[1].start,2);assert.equal(range.clips[1].end,4);assert.equal(range.markers[0].time,8);
+recipe.editing.tracks={audio:{muted:true},'sound:Voice':{solo:true}};
+assert.equal(E.audible(recipe,'audio'),false);assert.equal(E.audible(recipe,'sound:Voice'),true);
+recipe.editing.tracks={'sound:Deleted':{solo:true}};assert.equal(E.audible(recipe,'audio'),true);
+console.log('Locked ripple edits, source-range insertion, solo and removed-lane checks passed.');

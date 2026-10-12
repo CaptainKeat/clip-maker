@@ -73,7 +73,7 @@ def get(handler, parsed):
     elif (m:=re.fullmatch(r'/studio/waveforms/(\d+)',path)):
         ordinal=int(urllib.parse.parse_qs(parsed.query).get('ordinal',[0])[0]);handler._json(studio_waveforms.read(settings,int(m[1]),ordinal))
     elif (m:=re.fullmatch(r'/studio/scrub-frame/(\d+)',path)):
-        time=float(urllib.parse.parse_qs(parsed.query).get('time',[0])[0]);handler._serve_file(studio_waveforms.frame(settings,int(m[1]),time))
+        query=urllib.parse.parse_qs(parsed.query);time=float(query.get('time',[0])[0]);quality=int(query.get('quality',[360])[0]);handler._serve_file(studio_waveforms.frame(settings,int(m[1]),time,quality))
     elif path == "/studio/llm": handler._json({"profiles":llm.profiles(settings),"active":settings.llm_active_profile or "legacy"})
     elif path == "/studio/whisper": handler._json(whisper_setup.status(settings))
     elif path == "/studio/whisper/models": handler._json(whisper_setup.models(settings))
@@ -97,7 +97,7 @@ def get(handler, parsed):
         handler._serve_file(studio.dialogue_preview(settings,int(m[1]),start,mix))
     elif (m:=re.fullmatch(r"/studio/overlay-preview/(\d+)",path)):
         start=float(urllib.parse.parse_qs(parsed.query).get("start",[0])[0])
-        result=studio.proxy(settings,m[1],start,mix=[],webm=True)
+        result=studio.overlay_preview(settings,m[1],start)
         handler._serve_file(Path(settings.data_dir)/"studio-proxies"/Path(result["url"]).name)
     elif (m:=re.fullmatch(r"/studio/export-media/([a-f0-9]{32})",path)):
         rows = studio.list_exports(settings)
@@ -172,20 +172,17 @@ def post(handler, parsed, start_job, jobs, jobs_lock):
     elif (m:=re.fullmatch(r"/studio/projects/([a-f0-9]{32})/cancel",path)):
         studio.cancel_export(m[1]);handler._json({"cancelled":True})
     elif path == "/studio/proxy":
-        # Decoding is explicit and limited to a 90-second window near the cursor.
         asset_id,start = int(body["asset_id"]),float(body.get("start",0))
         import hashlib
-        mix=body.get("mix")
-        webm=body.get("webm") is True
-        signature=hashlib.sha256(json.dumps([mix,webm],sort_keys=True).encode()).hexdigest()[:10]
-        job_id = f"studio-proxy-{asset_id}-{int(start//60)}-{signature}"
-        with jobs_lock: previous = jobs.get(job_id,{})
-        if previous.get("status")=="complete":
-            handler._json({"ready":True,**studio.proxy(settings,asset_id,start,mix=mix,webm=webm)})
+        mix=body.get("mix");webm=body.get("webm") is True;quality=body.get("quality",540)
+        cached=studio.proxy(settings,asset_id,start,mix=mix,webm=webm,quality=quality,check=True)
+        signature=hashlib.sha256(json.dumps([mix,webm,quality],sort_keys=True).encode()).hexdigest()[:10]
+        job_id=f"studio-proxy-{asset_id}-{cached['offset']}-{signature}"
+        if cached['ready']:handler._json(cached)
         else:
             def make_proxy(settings_,progress=None):
-                return studio.proxy(settings_,asset_id,start,progress,mix,webm)
-            started = start_job(job_id,make_proxy,settings)
+                return studio.proxy(settings_,asset_id,start,progress,mix,webm,quality)
+            started=start_job(job_id,make_proxy,settings)
             handler._json({"started":started,"job_id":job_id})
     elif path == "/studio/settings":
         speech=whisper_setup.validate(body)

@@ -118,7 +118,7 @@ def project(settings, project_id):
 def create_project(settings, body):
     init(settings)
     name = str(body.get("name") or "Untitled edit").strip()[:120]
-    recipe = {"schema": 1, "clips": [], "captions": [], "overlays": [], "sounds": [], "markers": [],
+    recipe = {"schema": 1, "clips": [], "captions": [], "overlays": [], "sounds": [], "markers": [], "editing":{"ripple":True,"snap":True,"tracks":{},"track_groups":{}},
               "aspect": "16:9", "resolution": 1080, "quality": "balanced"}
     if body.get("asset_id"):
         media = asset(settings, body["asset_id"])
@@ -197,6 +197,7 @@ def normalize_recipe(raw, media_list):
         "resolution":int(raw.get("resolution")) if raw.get("resolution") in {720,1080,2160} else 1080,
         "quality":raw.get("quality") if raw.get("quality") in {"fast","balanced","high"} else "balanced",
         "editing":{"ripple":(raw.get('editing') or {}).get('ripple',True) is not False,"snap":(raw.get('editing') or {}).get('snap',True) is not False,
+                   "tracks":{str(key)[:90]:{**{flag:value.get(flag) is True for flag in ("locked","hidden","muted","solo")},"height":number(value.get("height"),52,38,180)} for key,value in ((raw.get("editing") or {}).get("tracks") or {}).items() if isinstance(value,dict) and (key in ("video","audio","captions","overlays","bookmarks") or str(key).startswith("sound:"))},
                    "track_groups":{name:(raw.get('editing') or {}).get('track_groups',{}).get(name) is True for name in ('captions','effects','video','audio','bookmarks')}}}
 
 
@@ -242,33 +243,47 @@ def thumbnail(settings, asset_id):
     return destination
 
 
-def proxy(settings, asset_id, start, progress=None, mix=None, webm=False):
+def proxy(settings, asset_id, start, progress=None, mix=None, webm=False, quality=540, check=False):
     media = asset(settings,asset_id)
     if media["kind"] != "video": raise ValueError("Preview copies are for video files")
-    left = int(max(0,min(float(start),media["metadata"]["duration_sec"]-.1))//60*60)
+    left = int(number(start,0,0,max(0,media["metadata"]["duration_sec"]-.04))//15*15)
     cache = Path(settings.data_dir)/"studio-proxies"
     cache.mkdir(exist_ok=True)
     stamp = Path(media["path"]).stat().st_mtime_ns
     available = {a["ordinal"] for a in media["metadata"]["audio_streams"]}
     audio = ([{"ordinal":0,"enabled":True,"gain_db":0}] if mix is None and 0 in available else mix or [])
     audio = [{"ordinal":int(a["ordinal"]),"gain_db":number(a.get("gain_db"),0,-36,12)} for a in audio if a.get("enabled") and int(a.get("ordinal",-1)) in available]
-    signature = hashlib.sha256(json.dumps(audio,sort_keys=True).encode()).hexdigest()[:10]
+    quality = int(quality) if quality in (360,540,720) else 540
+    signature = hashlib.sha256(json.dumps([audio,quality,"seek-v3"],sort_keys=True).encode()).hexdigest()[:10]
     output = cache/f"{asset_id}-{stamp}-{left}-{signature}.{'webm' if webm else 'mp4'}"
+    if check:
+        return {"ready":output.exists(),"url":f"/studio/proxy-media/{output.name}","offset":left,"duration":20,"quality":quality}
     if not output.exists():
         partial = output.with_name(output.stem+"."+uuid.uuid4().hex+".part"+output.suffix)
-        command = [settings.ffmpeg,"-hide_banner","-loglevel","error","-y","-ss",str(left),"-i",media["path"],"-t","90"]
+        command = [settings.ffmpeg,"-hide_banner","-loglevel","error","-y","-ss",str(left),"-threads","2","-i",media["path"],"-t","20"]
         graph=[]
         for i,a in enumerate(audio): graph.append(f"[0:a:{a['ordinal']}]aresample=48000,volume={10**(a['gain_db']/20)}[a{i}]")
         if audio:
             graph.append("".join(f"[a{i}]" for i in range(len(audio)))+f"amix=inputs={len(audio)}:normalize=0,alimiter=limit=.95[a]")
             command += ["-filter_complex",";".join(graph),"-map","0:v","-map","[a]"]
         else: command += ["-map","0:v","-an"]
-        command += ["-vf","scale=1280:720:force_original_aspect_ratio=decrease,setsar=1"]
+        command += ["-vf",f"scale=w='min(iw,{quality*16//9//2*2})':h='min(ih,{quality})':force_original_aspect_ratio=decrease:force_divisible_by=2,setsar=1,fps=30","-pix_fmt","yuv420p","-threads","2","-g","30","-keyint_min","30"]
         command += (["-c:v","libvpx-vp9","-deadline","realtime","-cpu-used","8","-row-mt","1","-crf","35","-b:v","0","-c:a","libopus"] if webm
                     else ["-c:v","libx264","-preset","veryfast","-crf","25","-c:a","aac","-movflags","+faststart"])
         subprocess.run(command+[str(partial)],check=True,capture_output=True,creationflags=CREATE_NO_WINDOW)
         partial.replace(output)
-    return {"url":f"/studio/proxy-media/{output.name}","offset":left}
+    return {"ready":True,"url":f"/studio/proxy-media/{output.name}","offset":left,"duration":20,"quality":quality}
+
+
+def overlay_preview(settings,asset_id,start=0):
+    media=asset(settings,asset_id);left=int(number(start,0,0,media['metadata']['duration_sec'])//60*60)
+    root=Path(settings.data_dir)/'studio-proxies';root.mkdir(exist_ok=True)
+    output=root/f"{asset_id}-{Path(media['path']).stat().st_mtime_ns}-{left}-0000000000.webm"
+    if not output.exists():
+        partial=output.with_name(output.stem+'.'+uuid.uuid4().hex+'.part.webm')
+        subprocess.run([settings.ffmpeg,'-v','error','-y','-ss',str(left),'-threads','2','-i',media['path'],'-t','90','-an','-vf','scale=960:540:force_original_aspect_ratio=decrease:force_divisible_by=2','-c:v','libvpx-vp9','-deadline','realtime','-cpu-used','8','-row-mt','1','-threads','2','-g','30','-crf','35','-b:v','0',str(partial)],check=True,capture_output=True,creationflags=CREATE_NO_WINDOW)
+        partial.replace(output)
+    return {'url':f'/studio/proxy-media/{output.name}','offset':left}
 
 
 def sound_preview(settings,asset_id,start=0,ordinal=0):

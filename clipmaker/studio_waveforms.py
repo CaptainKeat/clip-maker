@@ -98,19 +98,20 @@ def build(settings,asset_id,ordinal,identity,progress=None):
         with LOCK:ACTIVE.pop(key,None)
 
 
-def frame(settings,asset_id,time):
+def frame(settings,asset_id,time,quality=360):
     media=studio.asset(settings,asset_id)
     if media['kind']!='video':raise ValueError('Scrub frames need video media')
     value=float(time)
     if not math.isfinite(value):raise ValueError('Choose a finite frame time')
-    point=max(0,min(value,media['metadata']['duration_sec']-.04));point=min(round(point*2)/2,max(0,media['metadata']['duration_sec']-.04))
+    point=max(0,min(value,media['metadata']['duration_sec']-.04));point=min(round(point*(30 if quality==1080 else 2))/(30 if quality==1080 else 2),max(0,media['metadata']['duration_sec']-.04))
+    quality=1080 if quality==1080 else 360
     root=Path(settings.data_dir)/'studio-scrub-frames';root.mkdir(parents=True,exist_ok=True)
-    path=root/f"{asset_id}-{Path(media['path']).stat().st_mtime_ns}-{round(point*2)}.jpg"
+    path=root/f"{asset_id}-{Path(media['path']).stat().st_mtime_ns}-{round(point*1000)}-{quality}-v2.jpg"
     with FRAMES:
         if not path.exists():
             partial=path.with_name(path.stem+'.'+uuid.uuid4().hex+'.part.jpg')
             subprocess.run([settings.ffmpeg,'-hide_banner','-loglevel','error','-y','-ss',str(point),'-i',media['path'],
-                '-frames:v','1','-vf','scale=640:360:force_original_aspect_ratio=decrease',str(partial)],
+                '-frames:v','1','-vf',f"scale=w='min(iw,{quality*16//9//2*2})':h='min(ih,{quality})':force_original_aspect_ratio=decrease:force_divisible_by=2",str(partial)],
                 check=True,capture_output=True,timeout=20,creationflags=CREATE_NO_WINDOW)
             partial.replace(path)
     return path

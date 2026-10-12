@@ -4,7 +4,7 @@ A Windows video editor for clips, VODs and longer videos. Manual editing works w
 
 ## Install
 
-Download `Clip-Maker-v1.2.1-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
+Download `Clip-Maker-v1.3.0-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Clip-Maker.ps1
@@ -34,7 +34,7 @@ Full source durations are retained. There is no short-clip duration cap. The fir
 
 ## Manual editing tools
 
-Select a video piece and choose its audio track, then **Build waveform**. Peaks are cached locally and can be cancelled; use the whole-edit audio overview to seek. Compatible preview windows are cached in memory (up to eight) and on disk; still-frame previews respond while a new desktop window is prepared. Only visible timeline pieces are drawn at high zoom for long VODs. Drag the red playhead line or triangle, click and drag the ruler, empty lanes or video pieces, or drag the audio overview to scrub. Playback pauses while scrubbing. Hold near a timeline edge to scroll further. Focus the playhead and use Left/Right for frame steps, Shift+Left/Right for one-second steps, or Home/End for the beginning/end.
+Select a video piece and choose its audio track, then **Build waveform**. Peaks are cached locally and can be cancelled; use the whole-edit audio overview to seek. Compatible preview windows are cached in memory (up to twelve) and on disk; still-frame previews respond while a new desktop window is prepared. Only visible timeline pieces are drawn at high zoom for long VODs. Drag the red playhead line or triangle, click and drag the ruler, empty lanes or video pieces, or drag the audio overview to scrub. Playback pauses while scrubbing. Hold near a timeline edge to scroll further. Focus the playhead and use Left/Right for frame steps, Shift+Left/Right for one-second steps, or Home/End for the beginning/end.
 
 **Ripple layers** makes clip trims and removals move captions, overlays, soundtracks and bookmarks with the footage. Mark **I** and **O**, then **Ripple cut range** to remove a section. Copy a clip with its attached layers and paste it at the playhead; paste splits the destination clip. Copy/paste also works on individual captions and layers. Undo restores each edit. **Snap** aligns timeline drags with nearby edges, bookmarks and the playhead; hold Shift to bypass snapping. The video lane remains continuous when Ripple layers is off.
 
@@ -62,13 +62,13 @@ For visual tracking, choose **Choose / adjust target**. The editor prepares the 
 
 ## Preview and export
 
-The desktop uses cached VP9/Opus preview windows near the playhead because its bundled browser does not decode every recording codec. Each window is at most 90 seconds and reflects the chosen audio mix. Exports read the original files and use H.264/AAC. Long exports can take time and disk space: intermediate pieces and failure logs are retained in the private data directory.
+Timeline playback uses cached VP9/Opus windows of up to 20 seconds, with five seconds of overlap and one-second keyframes. Playback quality can be Fast (up to 360p), Balanced (540p), or Clear (720p); previews never upscale small sources. The next window is prepared during playback. While paused, a separate still frame shows up to 1080p. These preview settings do not reduce export quality. Exports read the original files and use H.264/AAC. Long exports can take time and disk space: intermediate pieces and failure logs are retained in the private data directory.
 
 ## Optional AI
 
 AI tools start **Off**. Manual editing, typed captions, tracking and export never require model inference. Settings → AI tools enables the existing highlight-finding and automatic-caption workflow and lets you configure an external Whisper executable/model and local model-server URL. Enabling AI does not load a model. The Windows app opens this workflow in the default browser; keep Clip Maker running while using it.
 
-No model weights, recordings, credentials or publishing configuration are shipped. Whisper.cpp and LM Studio are optional external tools. The source-only Parakeet integration needs its separate Python/runtime dependencies; the Windows package uses the external Whisper path.
+No Whisper/LLM weights, recordings, credentials or publishing configuration are shipped. The offline speaker models described below are bundled. Whisper.cpp and LM Studio are optional external tools. The source-only Parakeet integration needs its separate Python/runtime dependencies; the Windows package uses the external Whisper path.
 
 ## Updates
 
@@ -108,3 +108,14 @@ Preview layouts and overview waveforms are cached. The paused editor redraws on 
 The fixed timeline sidebar groups Captions, Effects, Video sources, Audio sources and Bookmarks in that order. Collapse any group to focus the timeline; the choice is saved with the project. Video and image overlays stay in the video group. Linked source waveforms, extra soundtracks and speaker tracks stay together in the audio group. Muted source waveforms are dimmed.
 
 Effects shows cues for existing fades, freeze endings and caption animation/motion. A cue selects its owning clip or caption for editing; its timing follows that item. It is not an independent filter layer. Bookmark selection now exposes its name and time in the inspector.
+
+
+### Resizable workspace, tracks and source monitor
+
+Drag the horizontal divider above the timeline upward to make the timeline taller. Drag the dividers beside the Sources panel and Inspector to resize their widths. Focus a divider and use arrow keys for keyboard resizing. Panel sizes stay local to this app/browser; Reset layout restores the defaults. The installed Windows window can also be resized and maximized.
+
+Track headers offer Mute (M) and Solo (S) for linked source audio and each sound/speaker lane, output visibility (V) for video, overlays and captions, Lock (L), and a height menu. Visibility and audio controls affect preview and exports. Hidden main video produces black while keeping its audio; hiding overlays/captions removes only those visuals. Lock protects content from edits, including ripple changes; linked source audio cannot be moved by a trim while locked. Collapsing a group remains a viewing preference. Track controls and heights save with the project and support Undo/Redo. The waveform overview and waveform selector are now inside Audio sources.
+
+Choose Preview on a video or audio in Sources to open the separate source monitor. Choose its audio stream, scrub or play it, set source In/Out numerically or with I/O buttons, and Insert range at the timeline playhead. Inserting video splits the destination clip and follows Ripple layers; audio ranges become sound layers. Source playback pauses timeline playback. Source points are independent of the timeline range marks.
+
+The Bookmarks tab searches names and timestamps, jumps to a result, and offers previous/next navigation. Select a bookmark to rename it or adjust its timeline time. Bookmarks keep their timing through ripple edits and source-range insertion.

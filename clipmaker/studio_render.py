@@ -17,7 +17,8 @@ def fades(item,duration,prefix=''):
 
 
 def export_recipe(settings, data, destination, work, progress):
-    recipe = data["recipe"]
+    from .studio_tracks import export_view,state
+    recipe = export_view(data["recipe"])
     media = {a["id"]:a for a in data["assets"]}
     w,h = data["frame"]
     total = sum(clip_duration(c) for c in recipe["clips"])
@@ -36,6 +37,7 @@ def export_recipe(settings, data, destination, work, progress):
         else: vf += f"scale={w}:{h}:force_original_aspect_ratio=decrease,pad={w}:{h}:(ow-iw)/2:(oh-ih)/2,setsar=1"
         if c["freeze"]: vf += f",tpad=stop_mode=clone:stop_duration={c['freeze']}"
         if c["transition"]=="fade": vf += f",fade=t=in:st=0:d={min(.3,duration/3)},fade=t=out:st={max(0,duration-.3)}:d=.3"
+        if state(recipe,"video").get("hidden"): vf += ",drawbox=color=black:t=fill"
         graph = [f"[0:v]{vf}[v]"]
         if enabled:
             atempo = c["speed"]
