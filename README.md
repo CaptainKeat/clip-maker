@@ -4,7 +4,7 @@ A Windows video editor for clips, VODs and longer videos. Manual editing works w
 
 ## Install
 
-Download `Clip-Maker-v1.1.2-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
+Download `Clip-Maker-v1.2.0-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Clip-Maker.ps1
@@ -90,3 +90,14 @@ node tests/test_motion_captions.cjs
 For a browser workspace use `python -m clipmaker serve`. Developer settings are in ignored `clipmaker.json`; installed settings live outside the source tree.
 
 To build, install PyInstaller 6.22.2. Install requirements into `vendor` if isolation is desired. Run `python scripts/fetch_media_tools.py` to fetch the pinned, hash-checked media tools, then `powershell -File build.ps1`. Package the resulting `dist/Clip Maker` directory as the root of the versioned Windows ZIP. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for licenses and dependency source links.
+
+
+### Waveforms, saving and speaker tracks
+
+Clips automatically build a local source waveform in an aligned row below their video. Additional audio and speaker tracks get waveforms too. The selected source-track menu controls the clip waveform. Cached peaks are reused across edits.
+
+The desktop close prompt offers Save project, Exit without saving and Cancel for pending changes or unnamed projects. Save project is also available in the editor toolbar. Earlier autosaves remain available when exiting without saving.
+
+Split speakers scans the selected video piece's chosen audio stream offline, using bundled WeSpeaker ResNet34 and pyannote segmentation models. No LLM or download is needed after installation. Scans run in a separate process with two inference threads and five-minute analysis chunks. Review and rename the aligned FLAC tracks before adding them. Applying mutes only the chosen source audio stream on that video piece; Undo restores it. Background, uncertain speech and overlapping voices are retained in separate tracks. Speaker names are estimates, consistent across the scanned piece; overlapping voices are retained together, not isolated. Preview the first 90 seconds in the review and use the timeline for the full tracks. Scan another source piece separately when needed.
+
+Preview layouts and overview waveforms are cached. The paused editor redraws on changes instead of continuously painting; recovery snapshots are debounced during dragging. Preview exports still use original footage.

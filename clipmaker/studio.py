@@ -183,6 +183,8 @@ def normalize_recipe(raw, media_list):
             result.append({"id":str(item.get("id") or uuid.uuid4().hex[:12])[:80],"asset_id":media["id"],"time":t,"duration":length,
                 "x":number(item.get("x"),50,0,100),"y":number(item.get("y"),50,0,100),"size":number(item.get("size"),.35,.05,2),
                 "gain_db":number(item.get("gain_db"),0,-36,12),"source_start":source_start,
+                "name":str(item.get('name') or '')[:80],"lane":str(item.get('lane') or '')[:80],
+                "speaker_source":str(item.get('speaker_source') or '')[:160],
                 "audio_ordinal":ordinal if kind=='sounds' else 0,
                 "fade_in":number(item.get('fade_in'),0,0,length/2),"fade_out":number(item.get('fade_out'),0,0,length/2),
                 "role":"dialogue" if item.get('role')=='dialogue' else 'other',

@@ -8,7 +8,7 @@ import time
 import urllib.parse
 from pathlib import Path
 
-from . import __version__, studio, updater, llm, whisper_setup, studio_transcribe, studio_waveforms, studio_presets
+from . import __version__, studio, updater, llm, whisper_setup, studio_transcribe, studio_waveforms, studio_presets, studio_speakers
 from .settings import save_settings
 
 UPDATE = {"status":"idle","current_version":__version__,"message":"Check for a new release when you are ready."}
@@ -67,6 +67,8 @@ def get(handler, parsed):
             "whisper_quality":settings.whisper_quality,"whisper_prompt":settings.whisper_prompt,"whisper_translate":settings.whisper_translate,
             "lmstudio_api_url":settings.lmstudio_api_url,"lmstudio_model":settings.lmstudio_model})
     elif path == "/studio/assets": handler._json(studio.assets(settings))
+    elif path == '/studio/speakers':handler._json(studio_speakers.status())
+    elif (m:=re.fullmatch(r'/studio/speakers/([a-f0-9]{32})',path)):handler._json(studio_speakers.result(settings,m[1]))
     elif path == '/studio/caption-presets':handler._json(studio_presets.list_presets(settings))
     elif (m:=re.fullmatch(r'/studio/waveforms/(\d+)',path)):
         ordinal=int(urllib.parse.parse_qs(parsed.query).get('ordinal',[0])[0]);handler._json(studio_waveforms.read(settings,int(m[1]),ordinal))
@@ -117,7 +119,19 @@ def post(handler, parsed, start_job, jobs, jobs_lock):
         handler._json(receive(settings,handler.rfile,name,length))
         return True
     body = handler._body()
-    if path == '/studio/caption-presets':handler._json(studio_presets.save(settings,body))
+    if (m:=re.fullmatch(r'/studio/projects/([a-f0-9]{32})/speakers',path)):
+        import uuid
+        from dataclasses import replace
+        p=studio.project(settings,m[1]);clip_id=str(body.get('clip_id',''));ordinal=int(body.get('audio_ordinal',0));count=int(body.get('speakers',0))
+        clip=next((c for c in p['recipe']['clips'] if c['id']==clip_id),None)
+        if not clip or ordinal not in {a['ordinal'] for a in studio.asset(settings,clip['asset_id'])['metadata']['audio_streams']} or not 0<=count<=8:raise ValueError('Choose a clip, audio source and zero to eight speakers')
+        if not studio_speakers.status()['available']:raise ValueError('Bundled speaker models are unavailable')
+        identity=uuid.uuid4().hex;studio_speakers.reserve(m[1],identity)
+        start_job('studio-speakers-'+identity,studio_speakers.scan,replace(settings),m[1],clip_id,ordinal,count,identity)
+        handler._json({'id':identity,'job_id':'studio-speakers-'+identity})
+    elif (m:=re.fullmatch(r'/studio/speakers/([a-f0-9]{32})/cancel',path)):
+        studio_speakers.cancel(settings,m[1]);handler._json({'cancelled':True})
+    elif path == '/studio/caption-presets':handler._json(studio_presets.save(settings,body))
     elif path == '/studio/waveforms/cancel':
         studio_waveforms.cancel(str(body.get('id','')));handler._json({'cancelled':True})
     elif path == '/studio/waveforms/cancel-all':studio_waveforms.cancel_all();handler._json({'cancelled':True})

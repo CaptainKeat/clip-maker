@@ -1,0 +1,7 @@
+{
+  "files": {
+    "wespeaker_en_voxceleb_resnet34.onnx": "5ef208a9da1453335308a6b6f4e6dfbd7e183a38b604de0a57664f45d257fe94",
+    "segmentation.int8.onnx": "d582f4b4c6b48205de7e0643c57df0df5615a3c176189be3fc461e9d18827b5d"
+  },
+  "runtime": "sherpa-onnx 1.13.8"
+}

@@ -1,0 +1,4 @@
+Creative Commons Attribution 4.0 International
+License: https://creativecommons.org/licenses/by/4.0/legalcode
+WeSpeaker VoxCeleb ResNet34, trained by WeSpeaker on VoxCeleb. Model unchanged.
+Source: https://github.com/wenet-e2e/wespeaker/blob/master/docs/pretrained.md

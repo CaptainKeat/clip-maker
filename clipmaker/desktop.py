@@ -18,7 +18,7 @@ def main():
     if sys.stderr is None: sys.stderr = (data_root/"errors.log").open("a",encoding="utf-8",buffering=1)
     from PySide6.QtCore import QUrl, QObject, Signal, Slot, QTimer, QLockFile, QFile, QIODevice
     from PySide6.QtGui import QIcon, QDesktopServices
-    from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox
+    from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox, QInputDialog
     from PySide6.QtWebEngineWidgets import QWebEngineView
     from PySide6.QtWebEngineCore import QWebEnginePage, QWebEngineSettings, QWebEngineScript
     from PySide6.QtWebChannel import QWebChannel
@@ -89,19 +89,41 @@ def main():
         def closeEvent(self,event):
             with JOBS_LOCK: running=any(j.get("status")=="running" and not j.get("id","").startswith("studio-waveform-") for j in JOBS.values())
             if running and not self.updating:
-                QMessageBox.information(self,"Job in progress","Finish or cancel the current export before closing Clip Maker.")
+                QMessageBox.information(self,"Job in progress","Finish or cancel the current media task before closing Clip Maker.")
                 event.ignore();return
-            # Frontend autosaves; ask its pending debounce to flush before exit.
             if not self.updating and not getattr(self,"saveComplete",False):
-                if getattr(self,"closing",False):
-                    event.ignore();return
+                if getattr(self,"closing",False):event.ignore();return
                 self.closing=True;event.ignore()
-                view.page().runJavaScript("Promise.resolve(window.studioFlush ? window.studioFlush() : undefined).then(()=>window.desktopBridge.saveFinished(true,''),e=>window.desktopBridge.saveFinished(false,String(e)))")
-                def deadline():
-                    if self.closing and not getattr(self,"saveComplete",False):
-                        self.closing=False
-                        QMessageBox.warning(self,"Save needs attention","Clip Maker stayed open because saving did not finish. Save your project before closing.")
-                QTimer.singleShot(10000,deadline);return
+                def flush(script):
+                    page.runJavaScript("Promise.resolve("+script+").then(()=>window.desktopBridge.saveFinished(true,''),e=>window.desktopBridge.saveFinished(false,String(e)))")
+                    def deadline():
+                        if self.closing and not getattr(self,"saveComplete",False):
+                            self.closing=False;page.runJavaScript("window.studioCancelClose && window.studioCancelClose()")
+                            QMessageBox.warning(self,"Save needs attention","Clip Maker stayed open because saving did not finish. Save your project or choose Exit without saving.")
+                    QTimer.singleShot(10000,deadline)
+                def inspected(value):
+                    try:state=json.loads(value) if value else {}
+                    except (ValueError,TypeError):state={"dirty":True}
+                    if not state.get('dirty') and not state.get('unnamed'):return flush("window.studioFlush ? window.studioFlush() : undefined")
+                    box=QMessageBox(self);box.setWindowTitle("Close Clip Maker?")
+                    box.setText("Save your project before closing?")
+                    box.setInformativeText("Previously autosaved work remains available. Exit without saving skips pending changes.")
+                    save_button=box.addButton("Save project",QMessageBox.ButtonRole.AcceptRole)
+                    exit_button=box.addButton("Exit without saving",QMessageBox.ButtonRole.DestructiveRole)
+                    cancel_button=box.addButton("Cancel",QMessageBox.ButtonRole.RejectRole)
+                    box.setDefaultButton(save_button);box.setEscapeButton(cancel_button);box.exec()
+                    if box.clickedButton()==exit_button:return flush("window.studioExit ? window.studioExit() : undefined")
+                    if box.clickedButton()==save_button:
+                        name=state.get('name','')
+                        if state.get('unnamed'):
+                            name,ok=QInputDialog.getText(self,"Save project","Project name:",text=name)
+                            if not ok or not name.strip():
+                                self.closing=False;page.runJavaScript("window.studioCancelClose()")
+                                return
+                        return flush("window.studioSaveNamed("+json.dumps(name.strip())+")")
+                    self.closing=False;page.runJavaScript("window.studioCancelClose && window.studioCancelClose()")
+                page.runJavaScript("window.studioBeginClose ? window.studioBeginClose() : '{}'",inspected)
+                return
             server.shutdown();server.server_close();lock.unlock()
             event.accept()
 
@@ -134,6 +156,7 @@ def main():
         if ok:
             window.saveComplete=True;window.close()
         else:
+            page.runJavaScript("window.studioCancelClose && window.studioCancelClose()")
             QMessageBox.warning(window,"Save needs attention",error+"\nYour edit stays open.")
     bridge.saveAcknowledged.connect(save_acknowledged)
     open_project = next((a.partition("=")[2] for a in sys.argv if a.startswith("--open-project=")),"")

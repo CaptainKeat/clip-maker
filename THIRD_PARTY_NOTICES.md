@@ -38,3 +38,7 @@ The optional Parakeet path uses `onnx-asr`, ONNX Runtime, and NVIDIA's Parakeet 
 - **PyInstaller 6.22.2**: GPL with the bootloader exception permitting distribution of this app. License: https://pyinstaller.org/en/stable/license.html . Source: https://github.com/pyinstaller/pyinstaller/tree/v6.22.2 .
 
 Clip Maker's MIT license covers its own source. Separately distributed dependencies retain their own licenses.
+
+## Offline speaker scanning
+
+WeSpeaker VoxCeleb ResNet34 (CC BY 4.0, WeSpeaker/VoxCeleb attribution), pyannote segmentation 3.0 (MIT, CNRS 2022), sherpa-onnx 1.13.8 (Apache 2.0) and its ONNX Runtime (MIT). Bundled model origins, checksums and licenses are in `third_party/speaker`.

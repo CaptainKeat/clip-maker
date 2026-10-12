@@ -13,6 +13,7 @@ from .media import CREATE_NO_WINDOW
 LOCK=threading.Lock()
 ACTIVE={}
 FRAMES=threading.Semaphore(2)
+BUILDERS=threading.Semaphore(1)
 
 
 def _cache(settings,asset_id,ordinal):
@@ -52,8 +53,12 @@ def cancel(identity):
 
 
 def build(settings,asset_id,ordinal,identity,progress=None):
-    key=(asset_id,ordinal);process=None;partial=None;values=[]
+    key=(asset_id,ordinal);process=None;partial=None;values=[];acquired=False
     try:
+        while not BUILDERS.acquire(timeout=.2):
+            with LOCK:
+                if ACTIVE[key]['cancelled']:raise RuntimeError('Waveform cancelled')
+        acquired=True
         media,path=_cache(settings,asset_id,ordinal)
         duration=media['metadata']['duration_sec'];bucket=max(.05,duration/12000);samples=max(1,round(bucket*8000));bucket=samples/8000
         partial=path.with_name(path.name+'.'+identity+'.part')
@@ -63,9 +68,10 @@ def build(settings,asset_id,ordinal,identity,progress=None):
                 '-map',f'0:a:{ordinal}','-ac','2','-ar','8000','-f','s16le','pipe:1'],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,creationflags=CREATE_NO_WINDOW)
             ACTIVE[key]['process']=process
         while data:=process.stdout.read(samples*4):
-            data=data[:len(data)//2*2];pcm=array.array('h');pcm.frombytes(data)
-            if sys.byteorder!='little':pcm.byteswap()
-            values.append(round(max((abs(v) for v in pcm),default=0)/32768*1000))
+            data=data[:len(data)//2*2];
+            import numpy as np
+            pcm=np.frombuffer(data,dtype='<i2').astype(np.int32)
+            values.append(round(int(np.abs(pcm).max(initial=0))/32768*1000))
             if progress and len(values)%20==0:progress(f'Waveform {min(99,round(len(values)*bucket/max(.1,duration)*100))}%')
             with LOCK:
                 if ACTIVE[key]['cancelled']:raise RuntimeError('Waveform cancelled')
@@ -88,6 +94,7 @@ def build(settings,asset_id,ordinal,identity,progress=None):
             if process and process.returncode:
                 try:partial.write_text(json.dumps({'partial':True,'peaks':values}),encoding='utf-8')
                 except OSError:pass
+        if acquired:BUILDERS.release()
         with LOCK:ACTIVE.pop(key,None)
 
 
