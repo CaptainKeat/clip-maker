@@ -36,7 +36,8 @@
   }
   function template(frame, width, box) {
     const values=[],coords=[];
-    for(let y=0;y<box.h;y+=2)for(let x=0;x<box.w;x+=2){coords.push([x,y]);values.push(frame[(box.y+y)*width+box.x+x]);}
+    const stride=Math.max(2,Math.ceil(Math.sqrt(box.w*box.h/1024)));
+    for(let y=0;y<box.h;y+=stride)for(let x=0;x<box.w;x+=stride){coords.push([x,y]);values.push(frame[(box.y+y)*width+box.x+x]);}
     const mean=values.reduce((sum,v)=>sum+v,0)/values.length;
     const centered=values.map(v=>v-mean), energy=centered.reduce((sum,v)=>sum+v*v,0);
     if(!values.length||energy/values.length<25)throw new Error("Choose a detailed area around the character, rather than flat sky or a solid colour.");

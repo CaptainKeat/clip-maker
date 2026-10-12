@@ -4,7 +4,7 @@ A Windows video editor for clips, VODs and longer videos. Manual editing works w
 
 ## Install
 
-Download `Clip-Maker-v1.1.1-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
+Download `Clip-Maker-v1.1.2-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Clip-Maker.ps1
@@ -58,7 +58,7 @@ Provider protocols follow the official [Ollama compatibility API](https://docs.o
 
 Select a caption and drag it in the preview. **Save position here**, scrub forward and move it again to make a path. Keys interpolate smoothly. Caption times and keys use the edited timeline.
 
-For visual tracking, choose **Select tracking target**, draw a small box over a distinctive detail, place the caption, then **Track caption**. This follows a local image patch without an AI model. It is limited to 30 seconds per cue and stops when confidence drops or a cut is reached. Review and correct paths after camera changes, occlusion or target-size changes.
+For visual tracking, choose **Choose / adjust target**. The editor prepares the caption's first frame before selection. Draw a box over a distinctive detail, then drag the box to move it, drag its handles to resize, or use Target X/Y/Width/Height for precise adjustments. Arrow keys nudge the focused target; Shift makes larger steps. **Redraw** replaces the box; **Clear target** removes it. Targets stay available when switching captions during the current editing session, and are shown at each caption's first frame. Place the caption, then **Track caption**. Larger target boxes are sampled across their entire area instead of being silently cropped. This follows a local image patch without an AI model. It is limited to 30 seconds per cue and stops when confidence drops or a cut is reached. Review and correct paths after camera changes, occlusion or target-size changes.
 
 ## Preview and export
 
