@@ -4,7 +4,7 @@ A Windows video editor for clips, VODs and longer videos. Manual editing works w
 
 ## Install
 
-Download `Clip-Maker-v1.2.0-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
+Download `Clip-Maker-v1.2.1-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Clip-Maker.ps1
@@ -101,3 +101,10 @@ The desktop close prompt offers Save project, Exit without saving and Cancel for
 Split speakers scans the selected video piece's chosen audio stream offline, using bundled WeSpeaker ResNet34 and pyannote segmentation models. No LLM or download is needed after installation. Scans run in a separate process with two inference threads and five-minute analysis chunks. Review and rename the aligned FLAC tracks before adding them. Applying mutes only the chosen source audio stream on that video piece; Undo restores it. Background, uncertain speech and overlapping voices are retained in separate tracks. Speaker names are estimates, consistent across the scanned piece; overlapping voices are retained together, not isolated. Preview the first 90 seconds in the review and use the timeline for the full tracks. Scan another source piece separately when needed.
 
 Preview layouts and overview waveforms are cached. The paused editor redraws on changes instead of continuously painting; recovery snapshots are debounced during dragging. Preview exports still use original footage.
+
+
+### Grouped timeline
+
+The fixed timeline sidebar groups Captions, Effects, Video sources, Audio sources and Bookmarks in that order. Collapse any group to focus the timeline; the choice is saved with the project. Video and image overlays stay in the video group. Linked source waveforms, extra soundtracks and speaker tracks stay together in the audio group. Muted source waveforms are dimmed.
+
+Effects shows cues for existing fades, freeze endings and caption animation/motion. A cue selects its owning clip or caption for editing; its timing follows that item. It is not an independent filter layer. Bookmark selection now exposes its name and time in the inspector.

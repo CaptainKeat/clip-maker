@@ -196,7 +196,8 @@ def normalize_recipe(raw, media_list):
         "aspect":raw.get("aspect") if raw.get("aspect") in {"source","16:9","9:16","1:1"} else "16:9",
         "resolution":int(raw.get("resolution")) if raw.get("resolution") in {720,1080,2160} else 1080,
         "quality":raw.get("quality") if raw.get("quality") in {"fast","balanced","high"} else "balanced",
-        "editing":{"ripple":(raw.get('editing') or {}).get('ripple',True) is not False,"snap":(raw.get('editing') or {}).get('snap',True) is not False}}
+        "editing":{"ripple":(raw.get('editing') or {}).get('ripple',True) is not False,"snap":(raw.get('editing') or {}).get('snap',True) is not False,
+                   "track_groups":{name:(raw.get('editing') or {}).get('track_groups',{}).get(name) is True for name in ('captions','effects','video','audio','bookmarks')}}}
 
 
 def clip_duration(c):
