@@ -1,0 +1,10 @@
+const assert=require('node:assert/strict'), E=require('../clipmaker/static/studio-editing.js');
+const base=()=>({clips:[{id:'v',asset_id:1,start:0,end:10,speed:1,freeze:0}],captions:[{id:'c',start:2,end:8,text:'Tracked',speaker:'A',motion:{x:20,y:30,keyframes:[{time:2,x:20,y:30},{time:8,x:80,y:30}]}}],sounds:[{id:'s',time:1,duration:8,source_start:3}],overlays:[],markers:[{time:7}]});
+let r=E.cutRange(base(),3,5);assert.equal(E.total(r),8);assert.deepEqual(r.clips.map(c=>[c.start,c.end]),[[0,3],[5,10]]);assert.equal(r.captions[0].end,6);assert.equal(r.captions[0].motion.keyframes[1].time,6);assert.deepEqual(r.sounds.map(s=>[s.time,s.duration,s.source_start]),[[1,2,3],[3,4,7]]);assert.equal(r.markers[0].time,5);
+r=E.trim(base(),0,2,9,1,0);assert.equal(E.total(r),7);assert.equal(r.captions[0].start,0);assert.equal(r.captions[0].end,6);assert.equal(r.markers[0].time,5);
+r=E.trim(base(),0,0,10,2,0);assert.equal(E.total(r),5);assert.equal(r.captions[0].end,4);
+const clip=E.copySelection(base(),'clips',0);r=E.paste(base(),clip,5).recipe;assert.equal(E.total(r),20);assert.equal(r.clips.length,3);assert.equal(r.captions.length,3);assert.equal(r.markers[0].time,17);
+assert.equal(E.snap(3.05,[3,4],100).time,3);assert.equal(E.snap(3.09,[3],100).time,3.09);assert.equal(E.snap(3.05,[3],100,false).time,3.05);
+const c=base().captions[0],path=JSON.stringify(c.motion.keyframes);E.style(c,{speaker:'A',motion:{font:'Consolas',bold:false,color:'#00ff00',size:1,effect:'shake',rotation:0}});assert.equal(JSON.stringify(c.motion.keyframes),path);assert.equal(c.motion.font,'Consolas');
+r=base();r.sounds=[{id:'a',time:0,duration:4},{id:'b',time:4,duration:4}];r=E.crossfade(r,0,1);assert.equal(r.sounds[1].time,3);assert.equal(E.envelope(r.sounds[0],3.5,4),.5);assert.equal(E.envelope(r.sounds[1],.5,4),.5);
+console.log('Ripple, trim, clipboard, snapping, tracked presets and crossfade checks passed.');

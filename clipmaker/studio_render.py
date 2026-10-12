@@ -7,6 +7,15 @@ from .motion_captions import append_motion_ass
 from .studio import _run, clip_duration
 
 
+def fades(item,duration,prefix=''):
+    result=''
+    left=min(float(item.get(prefix+'fade_in') or 0),duration/2)
+    right=min(float(item.get(prefix+'fade_out') or 0),duration/2)
+    if left:result+=f',afade=t=in:st=0:d={left}'
+    if right:result+=f',afade=t=out:st={max(0,duration-right)}:d={right}'
+    return result
+
+
 def export_recipe(settings, data, destination, work, progress):
     recipe = data["recipe"]
     media = {a["id"]:a for a in data["assets"]}
@@ -34,14 +43,21 @@ def export_recipe(settings, data, destination, work, progress):
             while atempo>2: tempos.append("atempo=2");atempo/=2
             while atempo<.5: tempos.append("atempo=.5");atempo/=.5
             tempos.append(f"atempo={atempo}")
+            voices=[]
             for j,a in enumerate(enabled):
                 graph.append(f"[0:a:{a['ordinal']}]atrim=duration={raw},asetpts=PTS-STARTPTS,aresample=48000,"
-                    f"volume={10**(a['gain_db']/20)},"+",".join(tempos)+f",apad,atrim=duration={duration}[a{j}]")
+                    f"volume={10**(a['gain_db']/20)},"+",".join(tempos)+f",apad,atrim=duration={duration}"+fades(c,duration,'audio_')+f"[track{j}]")
+                if a.get('dialogue'):
+                    graph.append(f'[track{j}]asplit=2[a{j}][voice{j}]');voices.append(f'[voice{j}]')
+                else:graph.append(f'[track{j}]anull[a{j}]')
             graph.append("".join(f"[a{j}]" for j in range(len(enabled)))+
                          f"amix=inputs={len(enabled)}:normalize=0:duration=longest,alimiter=limit=.95[a]")
+            if voices:graph.append(''.join(voices)+f'amix=inputs={len(voices)}:normalize=0,alimiter=limit=.95[voice]')
+            else:graph.append(f'anullsrc=r=48000:cl=stereo,atrim=duration={duration}[voice]')
         else:
             graph.append(f"anullsrc=r=48000:cl=stereo,atrim=duration={duration}[a]")
-        args += ["-filter_complex",";".join(graph),"-map","[v]","-map","[a]",
+            graph.append(f"anullsrc=r=48000:cl=stereo,atrim=duration={duration}[voice]")
+        args += ["-filter_complex",";".join(graph),"-map","[v]","-map","[a]","-map","[voice]",
                  "-c:v","libx264","-preset","veryfast","-crf","20","-pix_fmt","yuv420p",
                  "-c:a","aac","-ar","48000","-ac","2","-t",str(duration),str(fragment)]
         _run(settings,data["id"],args,work/"export.log",duration,progress,done/total*65,duration/total*.65)
@@ -62,20 +78,33 @@ def export_recipe(settings, data, destination, work, progress):
     video = "[0:v]"
     for i,item in enumerate(recipe["overlays"],start=1):
         a = media[item["asset_id"]]
-        args += (["-loop","1"] if a["kind"]=="image" else ["-stream_loop","-1"])+["-i",a["path"]]
+        args += (["-loop","1"] if a["kind"]=="image" else ["-stream_loop","-1","-ss",str(item.get('source_start',0))])+["-i",a["path"]]
         graph.append(f"[{i}:v]scale={max(2,round(w*item['size'])//2*2)}:-2,trim=duration={item['duration']},"
                      f"setpts=PTS-STARTPTS+{item['time']}/TB[ov{i}]")
         graph.append(f"{video}[ov{i}]overlay=x='W*{item['x']/100}-w/2':y='H*{item['y']/100}-h/2':"
                      f"enable='between(t,{item['time']},{item['time']+item['duration']})':eof_action=pass[v{i}]")
         video = f"[v{i}]"
-    audio = ["[0:a]"]
+    audio = ["[0:a:0]"]
+    ducked=[j for j,item in enumerate(recipe['sounds'],1) if item.get('duck') and item.get('role')!='dialogue']
+    controls=['[0:a:1]'] if ducked else []
     for j,item in enumerate(recipe["sounds"],start=1):
         i = len(recipe["overlays"])+j
         a = media[item["asset_id"]]
         args += ["-i",a["path"]]
-        graph.append(f"[{i}:a:0]atrim=duration={item['duration']},asetpts=PTS-STARTPTS,aresample=48000,"
-                     f"volume={10**(item['gain_db']/20)},adelay={round(item['time']*1000)}:all=1[snd{j}]")
+        graph.append(f"[{i}:a:{item.get('audio_ordinal',0)}]atrim=start={item.get('source_start',0)}:duration={item['duration']},asetpts=PTS-STARTPTS,aresample=48000,"
+                     f"volume={10**(item['gain_db']/20)}"+fades(item,item['duration'])+
+                     f",adelay={round(item['time']*1000)}:all=1,apad,atrim=duration={total}[raw{j}]")
+        if item.get('role')=='dialogue' and ducked:
+            graph.append(f'[raw{j}]asplit=2[snd{j}][extraVoice{j}]');controls.append(f'[extraVoice{j}]')
+        elif j not in ducked:graph.append(f'[raw{j}]anull[snd{j}]')
         audio.append(f"[snd{j}]")
+    if ducked:
+        graph.append(''.join(controls)+f'amix=inputs={len(controls)}:normalize=0:duration=longest,alimiter=limit=.95[voiceControl]')
+        if len(ducked)>1:graph.append('[voiceControl]asplit='+str(len(ducked))+''.join(f'[control{j}]' for j in ducked))
+        else:graph.append(f'[voiceControl]anull[control{ducked[0]}]')
+        for j in ducked:
+            item=recipe['sounds'][j-1]
+            graph.append(f"[raw{j}][control{j}]sidechaincompress=threshold=.03:ratio={item.get('duck_ratio',6)}:attack=20:release=350:makeup=1:knee=2:detection=rms[snd{j}]")
     graph.append("".join(audio)+f"amix=inputs={len(audio)}:duration=first:normalize=0,alimiter=limit=.95[outa]")
     if has_ass:
         # Escape FFmpeg filter syntax (not the subprocess argument list).

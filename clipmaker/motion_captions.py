@@ -10,6 +10,7 @@ import re
 from pathlib import Path
 
 EFFECTS = {"none", "pop", "shake", "grow", "fall"}
+FONTS = {"Arial", "Segoe UI", "Verdana", "Tahoma", "Trebuchet MS", "Georgia", "Consolas"}
 
 
 def _number(value, default: float, low: float, high: float) -> float:
@@ -35,6 +36,8 @@ def normalize_motion(raw, start: float, end: float) -> dict | None:
         "rotation": _number(raw.get("rotation"), 0, -180, 180),
         "color": color.lower() if re.fullmatch(r"#[0-9a-fA-F]{6}", color) else "#ffffff",
         "effect": effect if effect in EFFECTS else "none",
+        "font": raw.get("font") if raw.get("font") in FONTS else "Arial",
+        "bold": raw.get("bold",True) is not False,
         "keyframes": [],
     }
     # Keep out-of-cue keys: a shared speaker path can cover several cues, and
@@ -120,7 +123,7 @@ def motion_events(captions: list[dict], segments: list[dict], font_scale: float 
                 source_t = min(right, a + (t - start) * speed)
                 pose = motion_pose(motion, source_t, cue["start"], cue["end"])
                 tags = (f"\\an5\\q2\\pos({pose['x'] * frame[0]/100:.2f},{pose['y'] * frame[1]/100:.2f})"
-                        f"\\fnArial\\fs{64 * pose['size'] * font_scale * frame[0]/1080:.2f}"
+                        f"\\fn{motion['font']}\\b{1 if motion['bold'] else 0}\\fs{64 * pose['size'] * font_scale * frame[0]/1080:.2f}"
                         f"\\frz{-pose['rotation']:.2f}\\c{ass_color}\\bord3\\shad1")
                 events.append(f"Dialogue: 1,{_ass_time(t)},{_ass_time(stop)},Default,,0,0,0,,{{{tags}}}{text}")
         cursor += (right - left) / speed + freeze

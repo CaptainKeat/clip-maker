@@ -87,7 +87,7 @@ def main():
     class Window(QMainWindow):
         updating=False
         def closeEvent(self,event):
-            with JOBS_LOCK: running=any(j.get("status")=="running" for j in JOBS.values())
+            with JOBS_LOCK: running=any(j.get("status")=="running" and not j.get("id","").startswith("studio-waveform-") for j in JOBS.values())
             if running and not self.updating:
                 QMessageBox.information(self,"Job in progress","Finish or cancel the current export before closing Clip Maker.")
                 event.ignore();return

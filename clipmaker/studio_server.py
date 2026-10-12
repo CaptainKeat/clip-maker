@@ -8,7 +8,7 @@ import time
 import urllib.parse
 from pathlib import Path
 
-from . import __version__, studio, updater, llm, whisper_setup, studio_transcribe
+from . import __version__, studio, updater, llm, whisper_setup, studio_transcribe, studio_waveforms, studio_presets
 from .settings import save_settings
 
 UPDATE = {"status":"idle","current_version":__version__,"message":"Check for a new release when you are ready."}
@@ -67,6 +67,11 @@ def get(handler, parsed):
             "whisper_quality":settings.whisper_quality,"whisper_prompt":settings.whisper_prompt,"whisper_translate":settings.whisper_translate,
             "lmstudio_api_url":settings.lmstudio_api_url,"lmstudio_model":settings.lmstudio_model})
     elif path == "/studio/assets": handler._json(studio.assets(settings))
+    elif path == '/studio/caption-presets':handler._json(studio_presets.list_presets(settings))
+    elif (m:=re.fullmatch(r'/studio/waveforms/(\d+)',path)):
+        ordinal=int(urllib.parse.parse_qs(parsed.query).get('ordinal',[0])[0]);handler._json(studio_waveforms.read(settings,int(m[1]),ordinal))
+    elif (m:=re.fullmatch(r'/studio/scrub-frame/(\d+)',path)):
+        time=float(urllib.parse.parse_qs(parsed.query).get('time',[0])[0]);handler._serve_file(studio_waveforms.frame(settings,int(m[1]),time))
     elif path == "/studio/llm": handler._json({"profiles":llm.profiles(settings),"active":settings.llm_active_profile or "legacy"})
     elif path == "/studio/whisper": handler._json(whisper_setup.status(settings))
     elif path == "/studio/whisper/models": handler._json(whisper_setup.models(settings))
@@ -83,7 +88,11 @@ def get(handler, parsed):
         handler._serve_file(Path(settings.data_dir)/"studio-proxies"/name)
     elif (m:=re.fullmatch(r"/studio/sound-preview/(\d+)",path)):
         start=float(urllib.parse.parse_qs(parsed.query).get("start",[0])[0])
-        handler._serve_file(studio.sound_preview(settings,m[1],start))
+        ordinal=int(urllib.parse.parse_qs(parsed.query).get('ordinal',[0])[0])
+        handler._serve_file(studio.sound_preview(settings,m[1],start,ordinal))
+    elif (m:=re.fullmatch(r'/studio/dialogue-preview/(\d+)',path)):
+        query=urllib.parse.parse_qs(parsed.query);start=float(query.get('start',[0])[0]);mix=json.loads(query.get('mix',['[]'])[0])
+        handler._serve_file(studio.dialogue_preview(settings,int(m[1]),start,mix))
     elif (m:=re.fullmatch(r"/studio/overlay-preview/(\d+)",path)):
         start=float(urllib.parse.parse_qs(parsed.query).get("start",[0])[0])
         result=studio.proxy(settings,m[1],start,mix=[],webm=True)
@@ -108,7 +117,16 @@ def post(handler, parsed, start_job, jobs, jobs_lock):
         handler._json(receive(settings,handler.rfile,name,length))
         return True
     body = handler._body()
-    if path == "/studio/llm/save":
+    if path == '/studio/caption-presets':handler._json(studio_presets.save(settings,body))
+    elif path == '/studio/waveforms/cancel':
+        studio_waveforms.cancel(str(body.get('id','')));handler._json({'cancelled':True})
+    elif path == '/studio/waveforms/cancel-all':studio_waveforms.cancel_all();handler._json({'cancelled':True})
+    elif (m:=re.fullmatch(r'/studio/waveforms/(\d+)/build',path)):
+        ordinal=int(body.get('ordinal',0));asset_id=int(m[1]);studio_waveforms.read(settings,asset_id,ordinal)
+        identity,new=studio_waveforms.reserve(asset_id,ordinal)
+        if new:start_job('studio-waveform-'+identity,studio_waveforms.build,settings,asset_id,ordinal,identity)
+        handler._json({'id':identity,'job_id':'studio-waveform-'+identity})
+    elif path == "/studio/llm/save":
         llm.save(settings,body);save_settings(settings);handler._json({"profiles":llm.profiles(settings),"active":settings.llm_active_profile or "legacy"})
     elif path == "/studio/llm/activate":
         profile=llm.selected(settings,str(body.get("id","")));settings.llm_active_profile=profile["id"];save_settings(settings);handler._json({"active":profile["id"]})

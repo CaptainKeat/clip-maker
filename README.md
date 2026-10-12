@@ -4,7 +4,7 @@ A Windows video editor for clips, VODs and longer videos. Manual editing works w
 
 ## Install
 
-Download `Clip-Maker-v1.0.3-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
+Download `Clip-Maker-v1.1.0-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Clip-Maker.ps1
@@ -28,9 +28,19 @@ The installed app links original files in place. Browser drops and the browser f
 
 Projects autosave. Undo/redo is available during the editing session. Concurrent saves from another window are rejected to protect the saved edit. A local draft is retained when a save fails.
 
-Keyboard shortcuts: Space play/pause, Ctrl+S save, Ctrl+Z undo, Ctrl+Shift+Z redo, Ctrl+K split, Delete remove, M bookmark.
+Keyboard shortcuts: Space play/pause, Ctrl+S save, Ctrl+Z undo, Ctrl+Shift+Z redo, Ctrl+K split, Ctrl+C/X/V copy/cut/paste, I/O mark range, Delete remove, M bookmark.
 
 Full source durations are retained. There is no short-clip duration cap. The first release has one sequential video lane with additional overlay, caption, sound and bookmark lanes.
+
+## Manual editing tools
+
+Select a video piece and choose its audio track, then **Build waveform**. Peaks are cached locally and can be cancelled; use the whole-edit audio overview to seek. Compatible preview windows are cached in memory (up to eight) and on disk; still-frame previews respond while a new desktop window is prepared. Only visible timeline pieces are drawn at high zoom for long VODs.
+
+**Ripple layers** makes clip trims and removals move captions, overlays, soundtracks and bookmarks with the footage. Mark **I** and **O**, then **Ripple cut range** to remove a section. Copy a clip with its attached layers and paste it at the playhead; paste splits the destination clip. Copy/paste also works on individual captions and layers. Undo restores each edit. **Snap** aligns timeline drags with nearby edges, bookmarks and the playhead; hold Shift to bypass snapping. The video lane remains continuous when Ripple layers is off.
+
+In the caption inspector, choose a font, colour, animation and speaker, then **Save speaker preset**. Apply a saved style to one caption or all captions with the same speaker. Applying styles preserves tracked positions and keyframes. The selected preset also styles new typed and Whisper captions. Presets live in the private project database.
+
+For audio, explicitly mark microphone/speech source tracks as **Dialogue**, or give a soundtrack the Dialogue role. Enable **Duck under dialogue** on music/SFX and set its compression ratio. Clip audio and soundtracks have fade-in/out controls. **Crossfade next soundtrack** overlaps the next sound layer with matching fades; it does not overlap video pieces. Preview ducking follows live audio levels; exports use FFmpeg sidechain compression, so their envelopes can differ slightly. Source track and source-in controls select the sound layer's original audio.
 
 ## Models and speech
 
@@ -56,13 +66,13 @@ The desktop uses cached VP9/Opus preview windows near the playhead because its b
 
 ## Optional AI
 
-AI tools start **Off**. Manual editing, typed captions, tracking and export never require model inference. Settings â†’ AI tools enables the existing highlight-finding and automatic-caption workflow and lets you configure an external Whisper executable/model and local model-server URL. Enabling AI does not load a model. The Windows app opens this workflow in the default browser; keep Clip Maker running while using it.
+AI tools start **Off**. Manual editing, typed captions, tracking and export never require model inference. Settings → AI tools enables the existing highlight-finding and automatic-caption workflow and lets you configure an external Whisper executable/model and local model-server URL. Enabling AI does not load a model. The Windows app opens this workflow in the default browser; keep Clip Maker running while using it.
 
 No model weights, recordings, credentials or publishing configuration are shipped. Whisper.cpp and LM Studio are optional external tools. The source-only Parakeet integration needs its separate Python/runtime dependencies; the Windows package uses the external Whisper path.
 
 ## Updates
 
-Settings â†’ **Updates** checks stable releases from `CaptainKeat/clip-maker`, shows notes, and offers **Download update** followed by **Install & restart**. Downloads must match GitHub's size and SHA-256 digest. A separate hidden helper waits for the app to exit, preserves the previous installation, swaps files, and waits for the new app's UI readiness signal. Failed starts restore the previous app. Updates preserve user data and original media. Installation waits for exports to finish and saves pending edits first.
+Settings → **Updates** checks stable releases from `CaptainKeat/clip-maker`, shows notes, and offers **Download update** followed by **Install & restart**. Downloads must match GitHub's size and SHA-256 digest. A separate hidden helper waits for the app to exit, preserves the previous installation, swaps files, and waits for the new app's UI readiness signal. Failed starts restore the previous app. Updates preserve user data and original media. Installation waits for exports to finish and saves pending edits first.
 
 Portable copies need a writable parent directory. Update downloads, helper logs and receipts are retained under the private data directory.
 

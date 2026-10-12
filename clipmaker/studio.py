@@ -150,12 +150,14 @@ def normalize_recipe(raw, media_list):
         if end - start < .04:
             raise ValueError("Each video piece must contain at least one frame")
         available = {a["ordinal"] for a in media["metadata"]["audio_streams"]}
-        mixes = [{"ordinal": int(a["ordinal"]), "enabled": bool(a.get("enabled")), "gain_db": number(a.get("gain_db"),0,-36,12)}
+        mixes = [{"ordinal": int(a["ordinal"]), "enabled": bool(a.get("enabled")), "gain_db": number(a.get("gain_db"),0,-36,12),"dialogue":a.get("dialogue") is True}
                  for a in (c.get("audio") or []) if int(a.get("ordinal",-1)) in available]
         clips.append({"id": str(c.get("id") or uuid.uuid4().hex[:12])[:80],"asset_id":media["id"],"start":start,"end":end,
             "speed": number(c.get("speed"),1,.25,4), "freeze":number(c.get("freeze"),0,0,30),
             "transition":c.get("transition") if c.get("transition") in {"fade","none"} else "none",
-            "fit":"fill" if c.get("fit")=="fill" else "fit","audio":mixes})
+            "fit":"fill" if c.get("fit")=="fill" else "fit","audio":mixes,
+            "audio_fade_in":number(c.get("audio_fade_in"),0,0,(end-start)/max(.25,number(c.get('speed'),1,.25,4))/2),
+            "audio_fade_out":number(c.get("audio_fade_out"),0,0,(end-start)/max(.25,number(c.get('speed'),1,.25,4))/2)})
     duration = sum(clip_duration(c) for c in clips)
     captions = []
     for c in (raw.get("captions") or [])[:5000]:
@@ -172,16 +174,27 @@ def normalize_recipe(raw, media_list):
             if not media or (kind == "sounds" and not media["metadata"]["audio_streams"]) or (kind == "overlays" and media["kind"] == "audio"):
                 raise ValueError("A timeline layer references unavailable media")
             t = number(item.get("time"),0,0,duration)
+            source_start=number(item.get('source_start'),0,0,max(0,media['metadata']['duration_sec']-.04)) if media['kind']!='image' else 0
             length = number(item.get("duration"),3,.04,max(.04,duration-t))
+            if kind=='sounds':length=min(length,max(.04,media['metadata']['duration_sec']-source_start))
+            available={a['ordinal'] for a in media['metadata']['audio_streams']}
+            ordinal=int(item.get('audio_ordinal',0))
+            if kind=='sounds' and ordinal not in available: raise ValueError('A soundtrack references an unavailable audio track')
             result.append({"id":str(item.get("id") or uuid.uuid4().hex[:12])[:80],"asset_id":media["id"],"time":t,"duration":length,
                 "x":number(item.get("x"),50,0,100),"y":number(item.get("y"),50,0,100),"size":number(item.get("size"),.35,.05,2),
-                "gain_db":number(item.get("gain_db"),0,-36,12)})
+                "gain_db":number(item.get("gain_db"),0,-36,12),"source_start":source_start,
+                "audio_ordinal":ordinal if kind=='sounds' else 0,
+                "fade_in":number(item.get('fade_in'),0,0,length/2),"fade_out":number(item.get('fade_out'),0,0,length/2),
+                "role":"dialogue" if item.get('role')=='dialogue' else 'other',
+                "duck":item.get('duck') is True and item.get('role')!='dialogue',
+                "duck_ratio":number(item.get('duck_ratio'),6,1,20)})
         return result
     return {"schema":1,"clips":clips,"captions":captions,"overlays":extras("overlays"),"sounds":extras("sounds"),
         "markers":[{"time":number(m.get("time"),0,0,duration),"label":str(m.get("label") or "Bookmark")[:100]} for m in (raw.get("markers") or [])[:1000]],
         "aspect":raw.get("aspect") if raw.get("aspect") in {"source","16:9","9:16","1:1"} else "16:9",
         "resolution":int(raw.get("resolution")) if raw.get("resolution") in {720,1080,2160} else 1080,
-        "quality":raw.get("quality") if raw.get("quality") in {"fast","balanced","high"} else "balanced"}
+        "quality":raw.get("quality") if raw.get("quality") in {"fast","balanced","high"} else "balanced",
+        "editing":{"ripple":(raw.get('editing') or {}).get('ripple',True) is not False,"snap":(raw.get('editing') or {}).get('snap',True) is not False}}
 
 
 def clip_duration(c):
@@ -239,7 +252,7 @@ def proxy(settings, asset_id, start, progress=None, mix=None, webm=False):
     signature = hashlib.sha256(json.dumps(audio,sort_keys=True).encode()).hexdigest()[:10]
     output = cache/f"{asset_id}-{stamp}-{left}-{signature}.{'webm' if webm else 'mp4'}"
     if not output.exists():
-        partial = output.with_name(output.stem+".part"+output.suffix)
+        partial = output.with_name(output.stem+"."+uuid.uuid4().hex+".part"+output.suffix)
         command = [settings.ffmpeg,"-hide_banner","-loglevel","error","-y","-ss",str(left),"-i",media["path"],"-t","90"]
         graph=[]
         for i,a in enumerate(audio): graph.append(f"[0:a:{a['ordinal']}]aresample=48000,volume={10**(a['gain_db']/20)}[a{i}]")
@@ -255,16 +268,32 @@ def proxy(settings, asset_id, start, progress=None, mix=None, webm=False):
     return {"url":f"/studio/proxy-media/{output.name}","offset":left}
 
 
-def sound_preview(settings,asset_id,start=0):
+def sound_preview(settings,asset_id,start=0,ordinal=0):
     media=asset(settings,asset_id)
-    if not media["metadata"]["audio_streams"]: raise ValueError("This media has no audio")
+    if ordinal not in {a['ordinal'] for a in media["metadata"]["audio_streams"]}: raise ValueError("Choose an available audio track")
     root=Path(settings.data_dir)/"studio-proxies";root.mkdir(exist_ok=True)
     left=int(max(0,float(start))//60*60)
-    output=root/f"sound-{asset_id}-{Path(media['path']).stat().st_mtime_ns}-{left}.webm"
+    output=root/f"sound-{asset_id}-{Path(media['path']).stat().st_mtime_ns}-{left}-{ordinal}.webm"
     if not output.exists():
-        partial=output.with_name(output.stem+".part.webm")
-        subprocess.run([settings.ffmpeg,"-hide_banner","-loglevel","error","-y","-ss",str(left),"-i",media["path"],"-t","90","-vn","-map","0:a:0","-c:a","libopus",str(partial)],
+        partial=output.with_name(output.stem+"."+uuid.uuid4().hex+".part.webm")
+        subprocess.run([settings.ffmpeg,"-hide_banner","-loglevel","error","-y","-ss",str(left),"-i",media["path"],"-t","90","-vn","-map",f"0:a:{ordinal}","-c:a","libopus",str(partial)],
                        check=True,capture_output=True,creationflags=CREATE_NO_WINDOW)
+        partial.replace(output)
+    return output
+
+
+def dialogue_preview(settings,asset_id,start,mix):
+    media=asset(settings,asset_id);available={a['ordinal'] for a in media['metadata']['audio_streams']}
+    tracks=[{'ordinal':int(a['ordinal']),'gain_db':number(a.get('gain_db'),0,-36,12)} for a in mix if a.get('enabled') and a.get('dialogue') and int(a['ordinal']) in available]
+    if not tracks:raise ValueError('Mark a dialogue track for ducking')
+    root=Path(settings.data_dir)/'studio-proxies';root.mkdir(exist_ok=True);left=int(max(0,start)//60*60)
+    key=hashlib.sha256(json.dumps(tracks,sort_keys=True).encode()).hexdigest()[:10]
+    output=root/f'dialogue-{asset_id}-{Path(media["path"]).stat().st_mtime_ns}-{left}-{key}.webm'
+    if not output.exists():
+        partial=output.with_name(output.stem+'.'+uuid.uuid4().hex+'.part.webm')
+        graph=[f"[0:a:{a['ordinal']}]aresample=48000,volume={10**(a['gain_db']/20)}[a{i}]" for i,a in enumerate(tracks)]
+        graph.append(''.join(f'[a{i}]' for i in range(len(tracks)))+f'amix=inputs={len(tracks)}:normalize=0,alimiter=limit=.95[out]')
+        subprocess.run([settings.ffmpeg,'-hide_banner','-loglevel','error','-y','-ss',str(left),'-i',media['path'],'-t','90','-vn','-filter_complex',';'.join(graph),'-map','[out]','-c:a','libopus',str(partial)],check=True,capture_output=True,creationflags=CREATE_NO_WINDOW)
         partial.replace(output)
     return output
 

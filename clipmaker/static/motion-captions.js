@@ -1,7 +1,7 @@
 (function (scope) {
   "use strict";
   const clamp = (n, low, high) => Math.max(low, Math.min(high, n));
-  const defaults = () => ({enabled:true,x:50,y:30,size:1,rotation:0,color:"#ffffff",effect:"none",keyframes:[]});
+  const defaults = () => ({enabled:true,x:50,y:30,size:1,rotation:0,color:"#ffffff",effect:"none",font:"Arial",bold:true,keyframes:[]});
   function position(m, time) {
     const keys = m.keyframes || [];
     if (!keys.length) return {x:m.x,y:m.y};
