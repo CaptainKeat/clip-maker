@@ -72,9 +72,10 @@ def reserve(project_id,identity):
 
 
 def transcribe(settings,project_id,clip_id,ordinal,identity,progress=None):
-    destination=folder(settings)/identity;destination.mkdir(exist_ok=False)
+    destination=Path(settings.data_dir)/'studio-transcripts'/identity
     record={'id':identity,'project_id':project_id,'clip_id':clip_id,'status':'running'}
     try:
+        destination.mkdir(parents=True,exist_ok=False)
         project=studio.project(settings,project_id)
         clip=next((c for c in project['recipe']['clips'] if c['id']==clip_id),None)
         if not clip:raise ValueError('Select an existing video clip')
@@ -96,5 +97,7 @@ def transcribe(settings,project_id,clip_id,ordinal,identity,progress=None):
     except Exception as error:
         record.update(status='cancelled' if RUNS.get(identity,{}).get('cancelled') else 'error',error=str(error));raise
     finally:
-        (destination/'result.json').write_text(json.dumps(record,indent=2),encoding='utf-8')
-        with LOCK:ACTIVE.pop(project_id,None);RUNS.pop(identity,None)
+        try:
+            if destination.is_dir(): (destination/'result.json').write_text(json.dumps(record,indent=2),encoding='utf-8')
+        finally:
+            with LOCK:ACTIVE.pop(project_id,None);RUNS.pop(identity,None)

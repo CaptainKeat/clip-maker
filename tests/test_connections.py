@@ -81,5 +81,12 @@ class Connections(unittest.TestCase):
             studio_transcribe.cancel('b'*32);self.assertTrue(studio_transcribe.RUNS['b'*32]['cancelled'])
         finally:
             studio_transcribe.ACTIVE.pop('test-project',None);studio_transcribe.RUNS.pop('b'*32,None)
+    def test_storage_failure_releases_transcription_slot(self):
+        with tempfile.TemporaryDirectory() as directory:
+            studio_transcribe.reserve('test-project','d'*32)
+            with patch('clipmaker.studio_transcribe.Path.mkdir',side_effect=OSError('disk unavailable')):
+                with self.assertRaises(OSError):studio_transcribe.transcribe(Settings(data_dir=directory),'test-project','clip',0,'d'*32)
+            self.assertNotIn('test-project',studio_transcribe.ACTIVE)
+            self.assertNotIn('d'*32,studio_transcribe.RUNS)
 
 if __name__=='__main__':unittest.main()
