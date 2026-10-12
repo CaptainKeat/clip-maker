@@ -141,13 +141,21 @@ def _safe_archive_members(archive: zipfile.ZipFile, destination: Path) -> list[z
     return members
 
 
+def _windows_io_path(path: Path) -> Path:
+    """Use extended Windows paths for filesystem I/O without changing public paths."""
+    if os.name != 'nt':return path
+    absolute=os.path.abspath(path)
+    if absolute.startswith('\\\\?\\'):return Path(absolute)
+    return Path('\\\\?\\UNC\\'+absolute[2:] if absolute.startswith('\\\\') else '\\\\?\\'+absolute)
+
+
 def _extract_verified_archive(archive_path: Path, destination: Path) -> Path:
-    destination.mkdir(parents=True, exist_ok=False)
+    _windows_io_path(destination).mkdir(parents=True, exist_ok=False)
     with zipfile.ZipFile(archive_path) as archive:
         members = _safe_archive_members(archive, destination)
-        archive.extractall(destination, members)
+        archive.extractall(_windows_io_path(destination), members)
     payload = destination / "Clip Maker"
-    if not (payload / "Clip Maker.exe").is_file() or not (payload / "_internal").is_dir():
+    if not _windows_io_path(payload / "Clip Maker.exe").is_file() or not _windows_io_path(payload / "_internal").is_dir():
         raise ValueError("The update archive does not contain a complete Clip Maker package.")
     return payload
 
@@ -196,8 +204,8 @@ def stage_update(
     partial.replace(archive_path)
     extracted = _extract_verified_archive(archive_path, attempt / "extracted")
     candidate = install_parent / f"{install_dir.name}.update-{release.version}-{uuid.uuid4().hex[:8]}"
-    shutil.copytree(extracted, candidate)
-    if not (candidate / "Clip Maker.exe").is_file():
+    shutil.copytree(_windows_io_path(extracted), _windows_io_path(candidate))
+    if not _windows_io_path(candidate / "Clip Maker.exe").is_file():
         raise ValueError("The staged update copy is incomplete.")
     return StagedUpdate(release, archive_path, candidate, update_data_root() / "last-result.json")
 

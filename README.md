@@ -4,7 +4,7 @@ A Windows video editor for clips, VODs and longer videos. Manual editing works w
 
 ## Install
 
-Download `Clip-Maker-v1.4.0-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
+Download `Clip-Maker-v1.4.1-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Clip-Maker.ps1
@@ -75,6 +75,8 @@ No Whisper/LLM weights, recordings, credentials or publishing configuration are 
 Settings → **Updates** checks stable releases from `CaptainKeat/clip-maker`, shows notes, and offers **Download update** followed by **Install & restart**. Downloads must match GitHub's size and SHA-256 digest. A separate hidden helper waits for the app to exit, preserves the previous installation, swaps files, and waits for the new app's UI readiness signal. Failed starts restore the previous app. Updates preserve user data and original media. Installation waits for exports to finish and saves pending edits first.
 
 Portable copies need a writable parent directory. Update downloads, helper logs and receipts are retained under the private data directory.
+
+Windows packages use compact attribution filenames and are checked against a legacy updater path budget. Updates also use extended Windows paths during extraction and staging. If an older version fails to download a previous release due to a long filename, check for updates again and download v1.4.1 or newer; no Windows registry change is required. Failed update attempts are retained.
 
 ## Develop
 

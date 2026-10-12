@@ -24,3 +24,5 @@ Copy-Item -LiteralPath (Join-Path $project 'README.md') -Destination (Join-Path 
 Copy-Item -LiteralPath (Join-Path $project 'LICENSE') -Destination (Join-Path $project 'dist/Clip Maker/LICENSE')
 Copy-Item -LiteralPath (Join-Path $project 'assets/clipmaker.ico') -Destination (Join-Path $project 'dist/Clip Maker/clipmaker.ico')
 Copy-Item -LiteralPath (Join-Path $project 'Uninstall-Clip-Maker.ps1') -Destination (Join-Path $project 'dist/Clip Maker/Uninstall-Clip-Maker.ps1')
+& $pythonExe (Join-Path $project 'scripts/check_release_paths.py') (Join-Path $project 'dist/Clip Maker')
+if($LASTEXITCODE -ne 0){throw 'Windows update path budget failed'}
