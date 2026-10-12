@@ -1,0 +1,509 @@
+{
+  "index": "https://doc.qt.io/qt-6.11/qtwebengine-licensing.html",
+  "pages": [
+    {
+      "file": "qtwebengine-3rdparty-abseil.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-abseil.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-acorn-a-tiny-fast-javascript-parser-written-in-javascript.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-acorn-a-tiny-fast-javascript-parser-written-in-javascript.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-alliance-for-open-media-video-codec.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-alliance-for-open-media-video-codec.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-almost-native-graphics-layer-engine.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-almost-native-graphics-layer-engine.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-android-explicit-synchronization.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-android-explicit-synchronization.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-boringssl.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-boringssl.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-brotli.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-brotli.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-c-signal-slot-library.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-c-signal-slot-library.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-chromium-global.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-chromium-global.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-cityhash.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-cityhash.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-codemirror-5.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-codemirror-5.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-codemirror-6.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-codemirror-6.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-compact-encoding-detection.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-compact-encoding-detection.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-compact-language-detector-v3.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-compact-language-detector-v3.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-cpuinfo.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-cpuinfo.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-crashpad.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-crashpad.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-crc32c.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-crc32c.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-csp-evaluator-core-library-a-tool-that-allows-developers-to-check-if-a-content-security-policy-csp-serves-as-mitigation-against-xss-attacks.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-csp-evaluator-core-library-a-tool-that-allows-developers-to-check-if-a-content-security-policy-csp-serves-as-mitigation-against-xss-attacks.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-d3.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-d3.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-dav1d-is-an-av1-decoder.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-dav1d-is-an-av1-decoder.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-dawn.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-dawn.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-devtools-frontend.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-devtools-frontend.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-dragonbox.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-dragonbox.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-emoji-segmenter.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-emoji-segmenter.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-expat-xml-parser.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-expat-xml-parser.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-fast-float.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-fast-float.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-ffmpeg.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-ffmpeg.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-fft.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-fft.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-fiat-crypto-synthesizing-correct-by-construction-code-for-cryptographic-primitives.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-fiat-crypto-synthesizing-correct-by-construction-code-for-cryptographic-primitives.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-flac.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-flac.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-flatbuffers.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-flatbuffers.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-fontconfig.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-fontconfig.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-fp16.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-fp16.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-general-purpose-fft-fast-fourier-cosine-sine-transform-package.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-general-purpose-fft-fast-fourier-cosine-sine-transform-package.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-google-double-conversion.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-google-double-conversion.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-google-glog-x27-s-symbolization-library.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-google-glog-x27-s-symbolization-library.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-harfbuzz.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-harfbuzz.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-headers-for-the-windows-10-webauthn-api-webauthn-dll.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-headers-for-the-windows-10-webauthn-api-webauthn-dll.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-highway-c-library-for-simd.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-highway-c-library-for-simd.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-hunspell.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-hunspell.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-icu.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-icu.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-implementation-of-webdriver-bidi-standard.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-implementation-of-webdriver-bidi-standard.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-in-line-a-law-and-u-law-conversion-routines.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-in-line-a-law-and-u-law-conversion-routines.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-ink-stroke-modeler.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-ink-stroke-modeler.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-ink.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-ink.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-inspector-protocol.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-inspector-protocol.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-intl-messageformat.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-intl-messageformat.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-ipcz.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-ipcz.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-json5.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-json5.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-jsoncpp.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-jsoncpp.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-legacy-javascript.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-legacy-javascript.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-leveldb-a-fast-persistent-key-value-store.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-leveldb-a-fast-persistent-key-value-store.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-libaddressinput.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-libaddressinput.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-libavif-library-for-encoding-and-decoding-avif-files.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-libavif-library-for-encoding-and-decoding-avif-files.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-libgav1.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-libgav1.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-libpng.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-libpng.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-libsrtp.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-libsrtp.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-libtess2.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-libtess2.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-libvpx.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-libvpx.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-libxml.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-libxml.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-libxslt.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-libxslt.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-libyuv.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-libyuv.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-lighthouse-i18n-js.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-lighthouse-i18n-js.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-lighthouse.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-lighthouse.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-lit.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-lit.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-lzma-sdk.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-lzma-sdk.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-marked.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-marked.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-material-color-utilities.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-material-color-utilities.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-metrics-protos.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-metrics-protos.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-minigbm.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-minigbm.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-mitt.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-mitt.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-modp-base64-decoder.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-modp-base64-decoder.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-nvidia-control-x-extension-library.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-nvidia-control-x-extension-library.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-one-euro-filter.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-one-euro-filter.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-opus.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-opus.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-ots-opentype-sanitizer.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-ots-opentype-sanitizer.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-paul-hsieh-x27-s-superfasthash.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-paul-hsieh-x27-s-superfasthash.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-pdfium.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-pdfium.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-perfetto.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-perfetto.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-pffft-a-pretty-fast-fft.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-pffft-a-pretty-fast-fft.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-polymer.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-polymer.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-private-join-and-compute-subset.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-private-join-and-compute-subset.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-protocol-buffers-javascript.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-protocol-buffers-javascript.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-protocol-buffers.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-protocol-buffers.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-puppeteer-core.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-puppeteer-core.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-puppeteer-replay.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-puppeteer-replay.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-quiche.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-quiche.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-rapidhash.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-rapidhash.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-re2-an-efficient-principled-regular-expression-library.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-re2-an-efficient-principled-regular-expression-library.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-recurrent-neural-network-for-audio-noise-reduction.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-recurrent-neural-network-for-audio-noise-reduction.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-search-engines-resources.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-search-engines-resources.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-selenium-atoms.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-selenium-atoms.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-simdutf-unicode-transcoder.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-simdutf-unicode-transcoder.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-sizzle.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-sizzle.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-snappy-a-fast-compressor-decompressor.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-snappy-a-fast-compressor-decompressor.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-source-map-scopes-codec.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-source-map-scopes-codec.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-speech-dispatcher.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-speech-dispatcher.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-spir-v-headers.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-spir-v-headers.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-spir-v-tools.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-spir-v-tools.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-spl-sqrt-floor.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-spl-sqrt-floor.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-sqlite.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-sqlite.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-the-chromium-project.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-the-chromium-project.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-the-diff-match-and-patch-libraries-offer-robust-algorithms-to-perform-the-operations-required-for-synchronizing-plain-text.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-the-diff-match-and-patch-libraries-offer-robust-algorithms-to-perform-the-operations-required-for-synchronizing-plain-text.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-the-itu-g-722-codec-encode-and-decode-part.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-the-itu-g-722-codec-encode-and-decode-part.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-third-party-web.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-third-party-web.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-uri-template-parser.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-uri-template-parser.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-url-pattern-library.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-url-pattern-library.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-v8-fork-of-fdlibm.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-v8-fork-of-fdlibm.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-volk-meta-loader-for-vulkan-api.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-volk-meta-loader-for-vulkan-api.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-vscode-web-custom-data.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-vscode-web-custom-data.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-vulkan-api-headers.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-vulkan-api-headers.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-vulkan-loader-components.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-vulkan-loader-components.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-vulkanmemoryallocator.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-vulkanmemoryallocator.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-wasmparser.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-wasmparser.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-web-vitals.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-web-vitals.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-webkit.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-webkit.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-webm-container-parser-and-writer.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-webm-container-parser-and-writer.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-webp-image-encoder-decoder.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-webp-image-encoder-decoder.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-webrtc.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-webrtc.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-wicked-good-xpath.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-wicked-good-xpath.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-woff2.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-woff2.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-wuffs-wrangling-untrusted-file-formats-safely.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-wuffs-wrangling-untrusted-file-formats-safely.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-xdg-user-dirs.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-xdg-user-dirs.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-zlib.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-zlib.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-zod.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-zod.html"
+    },
+    {
+      "file": "qtwebengine-3rdparty-zstandard.html",
+      "source": "https://doc.qt.io/qt-6.11/qtwebengine-3rdparty-zstandard.html"
+    }
+  ]
+}

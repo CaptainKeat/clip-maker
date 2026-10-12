@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.spec
+/data/
+/exports/
+/build/
+/dist/
+/release/
+/vendor/
+/verification/
+/clipmaker.json
+/third_party/ffmpeg/bin/
+*.db
+*.db-wal
+*.db-shm
+*.part
+tests/studio-test-*/

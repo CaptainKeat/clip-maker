@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Clip Maker</title>
+    <link rel="stylesheet" href="/app.css">
+  </head>
+  <body>
+    <header>
+      <div>
+        <a href="/" class="secondary">← Manual editor</a><p class="eyebrow">OPTIONAL AI WORKSPACE</p>
+        <h1>Highlight finder</h1>
+        <p class="subtitle">Find moments, review candidates, edit captions and export when ready.</p>
+      </div>
+      <div class="header-actions">
+        <div id="lmstudio-control" class="lmstudio-control" data-state="loading">
+          <div class="lmstudio-status"><i aria-hidden="true"></i><span id="lmstudio-status">Checking LM Studio…</span></div>
+          <div class="lmstudio-buttons"><button id="lmstudio-load" class="secondary" type="button">Load AI</button><button id="lmstudio-gaming" class="secondary" type="button">Gaming Mode</button></div>
+          <small id="lmstudio-detail">Uses your configured local model when requested</small>
+        </div>
+        <button id="batch-button">Find moments in next 10</button>        <button id="prepare-button" class="secondary">Build next 3 cuts</button>
+        <button id="scan-button" class="secondary">Rescan library</button>
+      </div>
+    </header>
+    <main>
+      <section id="stats" class="stats"></section>
+      <details id="storage-settings" class="storage-settings">
+        <summary>
+          <span><strong>Storage folders</strong><small>Choose where Clip Maker finds VODs and saves finished clips</small></span>
+          <span id="storage-summary" class="storage-summary">Loading folders...</span>
+        </summary>
+        <form id="storage-form" class="storage-form">
+          <div class="storage-field">
+            <label for="source-folder"><strong>VOD folder</strong><small>Clip Maker searches this folder and its subfolders for recordings.</small></label>
+            <div class="folder-input-row"><input id="source-folder" type="text" autocomplete="off" spellcheck="false"><button id="browse-source-folder" class="secondary" type="button">Browse...</button></div>
+            <span id="source-folder-state" class="folder-state"></span>
+          </div>
+          <div class="storage-field">
+            <label for="output-folder"><strong>Finished clips folder</strong><small>Rendered reels and edited variants are saved here.</small></label>
+            <div class="folder-input-row"><input id="output-folder" type="text" autocomplete="off" spellcheck="false"><button id="browse-output-folder" class="secondary" type="button">Browse...</button></div>
+            <span id="output-folder-state" class="folder-state"></span>
+          </div>
+          <div class="storage-actions"><button id="save-storage-folders" type="submit">Save folders</button><p id="storage-message" class="storage-message"></p></div>
+        </form>
+      </details>
+      <div id="folder-browser-modal" class="modal-backdrop" hidden>
+        <section class="folder-browser-card" role="dialog" aria-modal="true" aria-labelledby="folder-browser-title">
+          <div class="folder-browser-heading">
+            <div><p class="eyebrow">CHOOSE A FOLDER</p><h2 id="folder-browser-title">Select folder</h2></div>
+            <button id="folder-browser-close" class="secondary" type="button" aria-label="Close folder browser">Cancel</button>
+          </div>
+          <div class="folder-browser-toolbar">
+            <button id="folder-browser-this-pc" class="secondary" type="button">This PC</button>
+            <button id="folder-browser-up" class="secondary" type="button">Up one level</button>
+            <input id="folder-browser-path" type="text" readonly aria-label="Current folder">
+          </div>
+          <div id="folder-browser-list" class="folder-browser-list" role="listbox" aria-label="Folders"></div>
+          <p id="folder-browser-message" class="folder-browser-message"></p>
+          <div class="folder-browser-actions">
+            <button id="folder-browser-choose" type="button">Choose this folder</button>
+            <button id="folder-browser-cancel" class="secondary" type="button">Cancel</button>
+          </div>
+        </section>
+      </div>
+      <section id="activity-panel" class="activity-panel" data-state="idle" aria-live="polite">
+        <div class="activity-mark" aria-hidden="true"><span></span></div>
+        <div class="activity-content">
+          <div class="activity-heading">
+            <div><p class="eyebrow">REEL WORKSHOP</p><h2 id="activity-title">Ready when you are</h2></div>
+            <span id="activity-percent" class="activity-percent">Ready</span>
+          </div>
+          <p id="activity-detail" class="activity-detail">Find a moment or build the next cuts. Everything runs locally on this PC.</p>
+          <div class="progress-track" role="progressbar" aria-label="Current job progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div id="activity-progress" class="progress-fill"></div>
+          </div>
+          <div class="activity-meta"><span id="activity-stage">Nothing running</span><span id="activity-count"></span></div>
+        </div>
+      </section>
+      <nav class="view-tabs" aria-label="Clip Maker sections"><button class="view-tab active" data-view="review">Review reels</button><button class="view-tab secondary" data-view="taste">Comedy Taste</button><button class="view-tab secondary" data-view="publish">Exports & Publish</button><button class="view-tab secondary" data-view="scheduled">Sent to Scheduler</button></nav>
+      <section id="review-view" class="workbench app-view">
+        <div class="panel library-panel">
+          <div class="panel-heading"><div><p class="eyebrow">LIBRARY</p><h2>Pick a VOD</h2></div><span id="job-status" class="job-status">Idle</span></div>
+          <label class="search"><span>Search recordings</span><input id="video-search" type="search" placeholder="Lethal, 2023-10-04…"></label>
+          <div id="video-list" class="video-list"></div>
+        </div>
+        <div class="panel queue-panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow">FINAL REVIEW</p><h2>Your reel queue</h2><p class="panel-description">Watch the cut, then keep it, bin it, or ask for another version.</p></div>
+            <select id="status-filter" aria-label="Candidate status">
+              <option value="all">Everything</option>
+              <option value="pending">Needs decision</option>
+              <option value="approved">Liked</option>
+              <option value="rejected">Passed / weak moment</option>
+            </select>
+          </div>
+          <div id="vod-review-filter" class="vod-review-filter" hidden>
+            <span id="vod-review-filter-label"></span>
+            <div class="vod-build-actions">
+              <button id="build-vod-3" type="button">Build best 3</button>
+              <button id="build-vod-5" type="button">Build best 5</button>
+              <button id="build-vod-all" type="button">Build all candidates</button>
+              <button id="clear-vod-filter" class="secondary" type="button">Show all VODs</button>
+            </div>
+          </div>
+          <div id="combine-toolbar" class="combine-toolbar">
+            <div><strong>Combine context + payoff</strong><span id="combine-help">Check 2 or 3 finished clips from the same VOD.</span></div>
+            <div><span id="combine-count">0 selected</span><button id="clear-combine" class="secondary" type="button" disabled>Clear</button><button id="combine-selected" type="button" disabled>Combine selected</button></div>
+          </div>
+          <div id="candidate-list" class="candidate-list"></div>
+        </div>
+      </section>
+      <div id="vod-preview-modal" class="modal-backdrop" hidden>
+        <section class="vod-preview-card" role="dialog" aria-modal="true" aria-labelledby="vod-preview-title">
+          <div class="vod-preview-heading">
+            <div><p class="eyebrow">VOD PREVIEW</p><h2 id="vod-preview-title">Recording</h2></div>
+            <button id="close-vod-preview" class="secondary" type="button" aria-label="Close preview">Not now</button>
+          </div>
+          <div id="vod-preview-media" class="vod-preview-media"></div>
+          <p id="vod-preview-meta" class="vod-preview-meta"></p>
+          <section id="vod-chapter-panel" class="vod-chapter-panel" hidden>
+            <div class="vod-chapter-heading">
+              <div><strong>OBS chapter flags</strong><small id="vod-chapter-count"></small></div>
+              <div><button id="select-all-vod-chapters" class="secondary" type="button">Use all</button><button id="clear-vod-chapters" class="secondary" type="button">Ignore all</button></div>
+            </div>
+            <div id="vod-chapter-timeline" class="vod-chapter-timeline" aria-label="Chapter flags across the VOD"></div>
+            <div id="vod-chapter-list" class="vod-chapter-list"></div>
+            <small class="vod-chapter-note">Checked flags become high-priority leads. Clip Maker searches about 45 seconds before each press and 15 seconds after, then uses the transcript and reactions to find the clean moment.</small>
+          </section>
+          <label id="vod-clip-folder-control" class="vod-clip-folder-control">
+            <span>Folder for this VOD's clips</span>
+            <input id="vod-clip-folder-name" type="text" maxlength="100" autocomplete="off" spellcheck="false" placeholder="Defaults to the VOD filename">
+            <small id="vod-clip-folder-destination">Future renders from this VOD will stay together in this folder.</small>
+          </label>
+          <label id="mic-track-control" class="mic-track-control">
+            <span>My microphone track</span>
+            <select id="mic-track-select" aria-label="Your OBS microphone track"></select>
+            <small>Saved for every VOD. Your track is labeled Me; other voices become Person 1, Person 2, etc.</small>
+          </label>
+          <div class="vod-preview-actions">
+            <button id="analyze-selected-vod" type="button">Analyze this VOD</button>
+            <button id="auto-build-vod" class="secondary auto-build-toggle" type="button" data-mode="0">Auto-build after analysis: Off</button>
+            <button id="view-vod-clips" class="secondary" type="button" hidden>View its clips</button>
+            <button id="retry-vod-preview" class="secondary" type="button" hidden>Try preview again</button>
+          </div>
+          <p class="vod-preview-note">Analyze first reads every possible moment, matches the words to laughter and audio reactions, then Qwen ranks the strongest clips. Auto-build renders only after that ranking is finished.</p>
+        </section>
+      </div>
+      <div id="hate-feedback-modal" class="modal-backdrop" hidden>
+        <section class="hate-feedback-card" role="dialog" aria-modal="true" aria-labelledby="hate-feedback-title">
+          <div class="vod-preview-heading">
+            <div><p class="eyebrow">TEACH THE PICKER</p><h2 id="hate-feedback-title">What went wrong?</h2></div>
+            <button id="close-hate-feedback" class="secondary" type="button" aria-label="Close feedback">Cancel</button>
+          </div>
+          <p id="hate-feedback-clip" class="hate-feedback-clip"></p>
+          <form id="hate-feedback-form">
+            <fieldset>
+              <legend>Choose everything that applies</legend>
+              <div class="feedback-reasons">
+                <label><input type="checkbox" name="hate-reason" value="not_funny"><span>Not funny</span></label>
+                <label><input type="checkbox" name="hate-reason" value="weak_moment"><span>Boring / weak moment</span></label>
+                <label><input type="checkbox" name="hate-reason" value="bad_audio"><span>Annoying or whining audio</span></label>
+                <label><input type="checkbox" name="hate-reason" value="bad_captions"><span>Bad captions</span></label>
+                <label><input type="checkbox" name="hate-reason" value="bad_timing"><span>Bad cut or timing</span></label>
+                <label><input type="checkbox" name="hate-reason" value="too_long"><span>Too long</span></label>
+                <label><input type="checkbox" name="hate-reason" value="too_short"><span>Too short</span></label>
+              </div>
+            </fieldset>
+            <label class="hate-feedback-notes">Tell the AI anything else
+              <textarea id="hate-feedback-text" maxlength="600" rows="4" placeholder="The high-pitched whining ruined it, the joke never landed, it started too early?"></textarea>
+            </label>
+            <p id="hate-feedback-message" class="publish-message"></p>
+            <div class="hate-feedback-actions">
+              <button id="submit-hate-feedback" class="danger" type="submit">Save feedback & Hate</button>
+              <button id="cancel-hate-feedback" class="secondary" type="button">Never mind</button>
+            </div>
+          </form>
+        </section>
+      </div>
+      <section id="taste-view" class="app-view taste-view" hidden>
+        <div class="panel taste-panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow">TEACH THE PICKER</p><h2>Your comedy taste library</h2><p class="panel-description">Paste public clips you think are hilarious. Clip Maker studies their dialogue and reaction patterns; it never republishes the reference footage.</p></div>
+            <span id="taste-count" class="connection-pill">0 references</span>
+          </div>
+          <div class="taste-layout">
+            <form id="taste-form" class="publish-form">
+              <label>Creator or style<input id="taste-creator" type="text" placeholder="CaseOh, SwaggerSouls, Jynxzi, SovietWomble…"></label>
+              <label>Public clip links<textarea id="taste-urls" rows="8" placeholder="One TikTok, Instagram Reel, or YouTube link per line"></textarea><small>Up to 20 short clips at a time. Pick specific clips you genuinely love—these are positive training signals.</small></label>
+              <label>What you like about these (optional)<textarea id="taste-notes" rows="3" placeholder="Group chaos, escalating bit, deadpan reaction, perfectly timed scream…"></textarea></label>
+              <button id="taste-import" type="submit">Import and teach the AI</button>
+              <p id="taste-message" class="publish-message"></p>
+            </form>
+            <div><h3>Learned references</h3><div id="taste-list" class="taste-list"></div></div>
+          </div>
+        </div>
+      </section>
+      <section id="publish-view" class="app-view publish-view" hidden>
+        <div class="panel publish-panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow">EXPORTS & PUBLISH</p><h2>Schedule liked reels</h2><p class="panel-description">Choose reels, destinations, and when Postiz should publish them.</p></div>
+            <span id="postiz-status" class="connection-pill">Checking Postiz</span>
+          </div>
+          <div class="publish-layout">
+            <div class="export-picker">
+              <div class="bulk-toolbar"><label><input id="select-all-exports" type="checkbox"> Select all</label><span id="selected-export-count">0 selected</span></div>
+              <div id="export-list" class="export-list"></div>
+            </div>
+            <form id="publish-form" class="publish-form">
+              <fieldset><legend>Post to</legend><div id="destination-list" class="destination-list"></div></fieldset>
+              <label>When<select id="publish-type"><option value="schedule">Schedule</option><option value="now">Post now</option></select></label>
+              <label id="start-at-label">Start date and time<input id="publish-start" type="datetime-local"></label>
+              <label id="interval-label">Space bulk posts apart<input id="publish-interval" type="number" min="1" step="1" value="24"><small>hours between each reel</small></label>
+              <div class="ai-caption-tools"><label>Caption tone<select id="caption-tone"><option value="funny">Funny</option><option value="chaotic">Chaotic</option><option value="deadpan">Deadpan</option><option value="clicky">Curiosity hook</option></select></label><button id="generate-ai-captions" type="button" class="secondary" disabled>Generate AI captions for selected</button></div>
+              <label>Caption template<textarea id="publish-caption" rows="5">{video}
+
+#gaming #gamingclips</textarea><small>Use {video} to insert the source video name.</small></label>
+              <button id="schedule-selected" type="submit" disabled>Send selected to Postiz</button>
+              <p id="publish-message" class="publish-message"></p>
+            </form>
+          </div>
+        </div>
+      </section>
+      <section id="scheduled-view" class="app-view scheduled-view" hidden>
+        <div class="panel scheduled-panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow">POSTIZ HISTORY</p><h2>Sent to Scheduler</h2><p class="panel-description">Only reels successfully handed to Postiz appear here.</p></div>
+            <span id="scheduled-count" class="connection-pill">0 sent</span>
+          </div>
+          <div id="scheduled-list" class="scheduled-list"></div>
+        </div>
+      </section>
+    </main>
+
+    <section id="clip-editor" class="clip-editor" hidden aria-label="Clip editor">
+      <header class="editor-header">
+        <div><p class="eyebrow">NON-DESTRUCTIVE REEL EDITOR</p><h2 id="editor-title">Edit clip</h2><p id="editor-status">Loading source VOD...</p></div>
+        <div class="editor-header-actions"><button id="editor-motion-window" class="secondary">Motion captions</button><button id="editor-subtitle-window" class="secondary">Subtitle window</button><button id="editor-undo" class="secondary">Undo</button><button id="editor-redo" class="secondary">Redo</button><button id="editor-close" class="secondary">Close</button></div>
+      </header>
+      <div class="editor-workspace">
+        <section class="editor-preview-panel">
+          <div class="editor-program">
+            <div class="editor-video-wrap"><video id="editor-video" preload="metadata"></video><div id="editor-caption-preview" class="editor-caption-preview" aria-live="off"></div><div id="editor-motion-layer" class="editor-motion-layer"></div><div id="editor-motion-target" class="editor-motion-target" hidden></div><div class="editor-safe-area"><span>Caption safe area</span></div></div>
+            <div class="editor-inspector">
+              <details id="editor-motion-panel" class="motion-panel" open>
+                <summary>Motion captions</summary>
+                <p id="editor-motion-cue">Select a subtitle on the timeline or in the subtitle window.</p>
+                <label class="motion-enable"><input id="editor-motion-enabled" type="checkbox" data-motion-field="enabled" data-motion-control> Animate selected subtitle</label>
+                <div class="motion-actions"><button id="editor-motion-phrase" class="secondary" type="button" data-motion-control>Make short phrase</button><button id="editor-motion-join" class="secondary" type="button">Join selected words</button><button id="editor-motion-position" class="secondary" type="button" data-motion-control>Place on video</button></div>
+                <div class="motion-fields">
+                  <label>Speaker <input id="editor-motion-speaker" type="text" maxlength="60" placeholder="Name" data-motion-control></label>
+                  <label>Colour <input id="editor-motion-color" type="color" value="#ffffff" data-motion-field="color" data-motion-control></label>
+                  <label>X % <input id="editor-motion-x" type="number" min="0" max="100" step="0.1" value="50" data-motion-field="x" data-motion-control></label>
+                  <label>Y % <input id="editor-motion-y" type="number" min="0" max="100" step="0.1" value="30" data-motion-field="y" data-motion-control></label>
+                  <label>Effect <select id="editor-motion-effect" data-motion-field="effect" data-motion-control><option value="none">None</option><option value="pop">Pop</option><option value="shake">Shake</option><option value="grow">Grow</option><option value="fall">Fall</option></select></label>
+                  <label>Rotation <input id="editor-motion-rotation" type="number" min="-180" max="180" step="1" value="0" data-motion-field="rotation" data-motion-control></label>
+                </div>
+                <label>Size <input id="editor-motion-size" type="range" min="0.4" max="3" step="0.05" value="1" data-motion-field="size" data-motion-control><output id="editor-motion-size-value">1.00×</output></label>
+                <button id="editor-motion-speaker-style" class="secondary" type="button" data-motion-control>Apply look to this speaker</button>
+                <div class="motion-actions"><button id="editor-motion-key" class="secondary" type="button" data-motion-control>◇ Save position here</button><button id="editor-motion-clear" class="secondary" type="button" data-motion-control>Clear path</button></div>
+                <div id="editor-motion-keys" class="motion-keys" aria-label="Caption position keyframes"></div>
+                <div class="motion-actions"><button id="editor-motion-pick" class="secondary" type="button" data-motion-control>Select tracking target</button><button id="editor-motion-track" type="button" data-motion-control>Track caption</button><button id="editor-motion-cancel" class="danger" type="button" hidden>Cancel tracking</button></div>
+                <p id="editor-motion-hint">Select a subtitle, place it above a character, then track a small detail. Shift-click words to join them into a phrase.</p>
+              </details>
+              <strong>Video</strong>
+              <label>Vertical framing<select id="editor-frame-mode"><option value="fit">Fit with blurred background</option><option value="fill">Fill the 9:16 frame</option></select></label>
+              <label>Zoom <input id="editor-frame-zoom" type="range" min="1" max="2.5" step="0.05"><output id="editor-frame-zoom-value"></output></label>
+              <label>Move left/right <span class="inspector-slider"><input id="editor-frame-x" type="range" min="-100" max="100" step="1"><output id="editor-frame-x-value">0</output></span></label>
+              <label>Move up/down <span class="inspector-slider"><input id="editor-frame-y" type="range" min="-100" max="100" step="1"><output id="editor-frame-y-value">0</output></span></label>
+              <strong>Selected clip</strong>
+              <label>Speed <input id="editor-segment-speed" type="range" min="0.25" max="4" step="0.05" value="1"><output id="editor-segment-speed-value">1.00×</output></label>
+              <label>Freeze ending <input id="editor-segment-freeze" type="range" min="0" max="10" step="0.25" value="0"><output id="editor-segment-freeze-value">0.00s</output></label>
+              <label>Transition<select id="editor-segment-transition"><option value="none">None</option><option value="fade">Quick fade</option><option value="dissolve">Dissolve</option></select></label>
+              <strong>Color</strong>
+              <label>Brightness <input id="editor-color-brightness" type="range" min="-1" max="1" step="0.05" value="0"><output id="editor-color-brightness-value">0.00</output></label>
+              <label>Contrast <input id="editor-color-contrast" type="range" min="0" max="2" step="0.05" value="1"><output id="editor-color-contrast-value">1.00</output></label>
+              <label>Saturation <input id="editor-color-saturation" type="range" min="0" max="3" step="0.05" value="1"><output id="editor-color-saturation-value">1.00</output></label>
+              <label>Temperature <input id="editor-color-temperature" type="range" min="-1" max="1" step="0.05" value="0"><output id="editor-color-temperature-value">0.00</output></label>              <strong>Captions</strong>
+              <label>Caption style<select id="editor-caption-preset"><option value="punch">Punch</option><option value="chaos">Chaos</option><option value="clean">Clean</option></select></label>
+              <label>Caption size <input id="editor-caption-scale" type="range" min="0.6" max="1.6" step="0.05"><output id="editor-caption-scale-value"></output></label>
+              <label>Caption height <span class="inspector-slider"><input id="editor-caption-y" type="range" min="-500" max="500" step="10"><output id="editor-caption-y-value">0</output></span></label>
+              <strong>Audio</strong>
+              <label>Audio cleanup<select id="editor-audio-preset"><option value="natural">Natural</option><option value="soft">Soft</option><option value="restored">Restore scratchy audio</option></select></label>
+              <label>Fade in <input id="editor-fade-in" type="range" min="0" max="5" step="0.25"><output id="editor-fade-in-value"></output></label>
+              <label>Fade out <input id="editor-fade-out" type="range" min="0" max="5" step="0.25"><output id="editor-fade-out-value"></output></label>
+            </div>
+          </div>
+          <div class="editor-transport">
+            <button id="editor-play-selection">Play selection</button>
+            <button id="editor-pause" class="secondary">Pause</button>
+            <button id="editor-preview-size" class="secondary">Expand preview</button>
+            <button id="editor-step-back" class="secondary">-1 frame</button>
+            <button id="editor-step-forward" class="secondary">+1 frame</button>
+            <span id="editor-time-readout">00:00 / 00:00</span>
+          </div>
+        </section>
+        <section class="editor-timeline-panel">
+          <div class="nle-toolbar">
+            <strong>Timeline</strong><span id="editor-duration">0s</span>
+            <div class="editor-tools" role="toolbar" aria-label="Editing tools"><button id="editor-tool-pointer" class="tool-button active" data-tool="pointer" title="Selection tool (V)">↖ V</button><button id="editor-tool-blade" class="tool-button secondary" data-tool="blade" title="Blade tool (C)">✂ C</button><button id="editor-tool-track" class="tool-button secondary" data-tool="track" title="Track select (A)">⇥ A</button><button id="editor-split" class="secondary" title="Split at playhead (Ctrl+K)">Split</button><button id="editor-delete-selected" class="danger" title="Delete selected (Delete)">Delete</button><button id="editor-add-overlay" class="secondary">+ Image/B-roll</button><button id="editor-add-sfx" class="secondary">+ SFX</button><button id="editor-record-audio" class="secondary">● Record audio</button><button id="editor-add-keyframe" class="secondary" title="Audio keyframe (K)">◇ Keyframe</button></div>
+            <label>Start <input id="editor-start-number" type="number" min="0" step="0.1"></label>
+            <label>End <input id="editor-end-number" type="number" min="0" step="0.1"></label>
+            <button id="editor-cut-start" class="secondary">Mark cut in</button><button id="editor-cut-finish" class="danger" disabled>Remove to playhead</button><button id="editor-clear-cuts" class="secondary">Clear cuts</button><button id="editor-clear-selection" class="secondary" disabled>Deselect</button><label class="timeline-zoom">Zoom <input id="editor-timeline-zoom" type="range" min="1" max="4" step="0.25" value="1"></label>
+            <span id="editor-cut-status" class="editor-warning">Drag the clip to move it. Drag either edge to trim.</span>
+          </div>
+          <div id="editor-timeline-scroll" class="nle-scroll">
+            <div id="editor-timeline" class="nle-timeline">
+              <div id="editor-marquee" class="timeline-marquee" hidden></div>
+              <div id="editor-playhead" class="nle-playhead"><i></i></div>
+              <div id="editor-ruler" class="nle-ruler"></div>
+              <div class="nle-track video-track">
+                <div class="nle-track-label">V1 <small>Video</small></div>
+                <div class="nle-track-lane"><div id="editor-video-clip" hidden></div><div id="editor-segment-clips"></div><div id="editor-cut-overlays"></div><div id="editor-cut-preview" class="pending-cut-preview" hidden><span>Pending cut</span></div></div>
+              </div>
+              <div class="nle-track overlay-track">
+                <div class="nle-track-label">V2 <small>Images / B-roll</small></div>
+                <div id="editor-overlay-track" class="nle-track-lane overlay-lane"></div>
+              </div>              <div class="nle-track caption-track">
+                <div class="nle-track-label">C1 <small>Captions</small></div>
+                <div id="editor-caption-track" class="nle-track-lane caption-lane"></div>
+              </div>
+              <div id="editor-audio-tracks" class="editor-audio-tracks"></div>
+              <div class="nle-track sfx-track"><div class="nle-track-label">SFX <small>Sounds / voice</small></div><div id="editor-sfx-track" class="nle-track-lane sfx-lane"></div></div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <input id="editor-overlay-input" type="file" accept="image/*,video/mp4,video/webm,video/quicktime" hidden><input id="editor-sfx-input" type="file" accept="audio/*" hidden>
+      <aside id="editor-subtitle-panel" class="editor-subtitle-panel" aria-label="Subtitle editor window">
+        <header id="editor-subtitle-drag-handle" class="subtitle-window-titlebar">
+          <div class="subtitle-window-mark">CC</div>
+          <div><strong>Subtitle Editor</strong><small id="editor-caption-summary">Select a caption on the timeline, then edit the words or timing.</small></div>
+          <button id="editor-subtitle-minimize" class="window-control secondary" type="button" aria-label="Minimize subtitle window">—</button>
+          <button id="editor-subtitle-close" class="window-control secondary" type="button" aria-label="Close subtitle window">×</button>
+        </header>
+        <div class="subtitle-window-toolbar"><button id="editor-auto-subtitles" class="secondary">Auto Subtitles</button><button id="editor-add-caption" class="secondary">+ Add subtitle</button><span>Drag this window anywhere · resize from the corner</span></div>
+        <div id="editor-caption-list" class="editor-caption-list"></div>
+      </aside>      <footer class="editor-footer">
+        <span id="editor-save-state">Original reel stays untouched.</span>
+        <div><button id="editor-reset" class="secondary">Reset draft</button><button id="editor-save" class="secondary">Save draft</button><button id="editor-render">Render new attempt</button></div>
+      </footer>
+      <div id="editor-job-modal" class="editor-job-modal" hidden>
+        <section role="dialog" aria-modal="true" aria-labelledby="editor-job-title">
+          <div class="job-modal-icon">CC</div>
+          <div class="job-modal-copy"><p class="eyebrow">AUTO SUBTITLES</p><h3 id="editor-job-title">Preparing subtitles</h3><p id="editor-job-stage">Starting...</p></div>
+          <strong id="editor-job-percent">0%</strong>
+          <div class="job-modal-progress"><i id="editor-job-fill"></i></div>
+          <p id="editor-job-detail">Preparing the audio.</p><p id="editor-job-eta">Calculating time remaining...</p>
+          <button id="editor-job-close" class="secondary" hidden>Close</button>
+        </section>
+      </div>    </section>
+
+
+    <template id="candidate-template">
+      <article class="candidate">
+        <div class="candidate-media"><div class="preview-placeholder"><span>No finished cut yet</span><button data-action="prepare">Make first cut</button></div></div>
+        <div class="candidate-body">
+          <div class="candidate-topline"><label class="combine-check" hidden><input type="checkbox" data-role="combine"> Add to combined reel</label><span class="score"></span><span class="timecode"></span></div>
+          <div class="attempt-line"><span class="attempt-badge">Not built</span><span class="recipe-detail">Precise captions · local render</span><span class="candidate-destination" hidden></span></div><div class="candidate-job" hidden><div class="candidate-job-copy"><strong></strong><span></span></div><div class="mini-progress"><i></i></div></div>
+          <h3></h3><p class="reason"></p><blockquote class="transcript"></blockquote>
+          <div class="candidate-actions"></div>
+        </div>
+      </article>
+    </template>
+    <script src="/app.js" defer></script>
+    <script src="/motion-captions.js" defer></script>
+    <script src="/editor.js" defer></script>
+    <script src="/publish.js" defer></script>
+  </body>
+</html>
