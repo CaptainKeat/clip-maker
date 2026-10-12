@@ -3,31 +3,45 @@
   window.StudioWorkspace = ctx => {
     const $=s=>document.querySelector(s), E=window.StudioEditing;
     const esc=ctx.esc, clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
-    let sizes={timeline:390,bin:250,inspector:260}, source=null, sourceTime=0, sourceOffset=0, sourcePlaying=false, sourceToken=0;
-    try{sizes={...sizes,...JSON.parse(localStorage.getItem('clipmaker-layout-v2')||'{}')};}catch{}
+    const L=window.StudioLayout,layoutKey='clipmaker-workspaces-v1';let state=L.normalize();
+    try{const saved=localStorage.getItem(layoutKey);state=L.normalize(saved?JSON.parse(saved):{layouts:{editing:JSON.parse(localStorage.getItem('clipmaker-layout-v2')||'{}')}});}catch{}
+    let sizes=state.layouts[state.selected], source=null, sourceTime=0, sourceOffset=0, sourcePlaying=false, sourceToken=0;
     const editor=$('#studio-editor');
+    const columns=$('.editor-columns'),lower=$('.editor-lower'),bin=$('.media-bin'),controls=$('.project-inspector'),dock=$('.effects-dock'),library=$('#studio-effects-library');
+    let docked=null;
+    function arrange(){
+      const split=state.selected!=='editing'&&!document.body.classList.contains('handheld');
+      if(split!==docked){docked=split;
+        if(split){lower.prepend(bin);columns.prepend(controls);dock.append(library);library.hidden=false;tab(false);}
+        else{columns.prepend(bin);columns.append(controls);bin.insertBefore(library,$('#studio-source-monitor'));library.hidden=true;tab(false);}
+      }
+      if(editor.dataset.workspace!==state.selected)ctx.workspace?.(state.selected);
+      editor.dataset.workspace=state.selected;editor.dataset.docked=String(split);
+      $('#studio-workspace').value=state.selected;
+      dock.hidden=!split;$('#studio-effect-resize').hidden=!split;
+    }
     function resize(){
       if(editor.hidden||!editor.clientHeight)return;const width=$('.editor-columns').clientWidth, height=editor.clientHeight;
       const handheld=document.body.classList.contains('handheld');
-      sizes.timeline=clamp(Number(sizes.timeline)||390,180,Math.max(180,handheld?Math.floor(height*.42):height-160));
-      sizes.bin=clamp(Number(sizes.bin)||250,150,Math.max(150,width-430));
-      sizes.inspector=clamp(Number(sizes.inspector)||260,180,Math.max(180,width-sizes.bin-180));
-      editor.style.setProperty('--timeline-size',sizes.timeline+'px');editor.style.setProperty('--bin-size',sizes.bin+'px');editor.style.setProperty('--inspector-size',sizes.inspector+'px');
-      for(const [id,key]of [['studio-timeline-resize','timeline'],['studio-bin-resize','bin'],['studio-inspector-resize','inspector']]){const h=$('#'+id);h.setAttribute('aria-valuenow',Math.round(sizes[key]));h.setAttribute('aria-valuemin',key==='timeline'?180:150);h.setAttribute('aria-valuemax',Math.max(1000,Math.round(sizes[key])));}
+      arrange();const fitted=L.fit(sizes,width,height,handheld);
+      for(const [key,value]of Object.entries(fitted))editor.style.setProperty('--'+(key==='effects'?'effects':key)+'-size',value+'px');
+      for(const [id,key]of [['studio-timeline-resize','timeline'],['studio-bin-resize','bin'],['studio-inspector-resize','inspector'],['studio-effect-resize','effects']]){const h=$('#'+id);h.setAttribute('aria-valuenow',Math.round(fitted[key]));h.setAttribute('aria-valuemin',key==='timeline'&&handheld?130:key==='bin'?150:180);h.setAttribute('aria-valuemax','2400');}
       ctx.layout();
     }
-    function remember(){localStorage.setItem('clipmaker-layout-v2',JSON.stringify(sizes));}
-    for(const [id,key,axis,direction]of [['studio-timeline-resize','timeline','y',-1],['studio-bin-resize','bin','x',1],['studio-inspector-resize','inspector','x',-1]]){
+    function remember(){try{localStorage.setItem(layoutKey,JSON.stringify(state));}catch{ctx.message('Layout could not be saved in this browser.',true);}}
+    function directionFor(key,direction){return key==='inspector'&&docked?1:direction;}
+    for(const [id,key,axis,direction]of [['studio-timeline-resize','timeline','y',-1],['studio-bin-resize','bin','x',1],['studio-inspector-resize','inspector','x',-1],['studio-effect-resize','effects','x',-1]]){
       const handle=$('#'+id);let drag=null;
-      handle.onpointerdown=e=>{if(e.button!==0)return;e.preventDefault();drag={point:axis==='x'?e.clientX:e.clientY,size:sizes[key],id:e.pointerId};handle.setPointerCapture(e.pointerId);};
-      handle.onpointermove=e=>{if(!drag)return;sizes[key]=drag.size+direction*((axis==='x'?e.clientX:e.clientY)-drag.point);resize();};
+      handle.onpointerdown=e=>{if(e.button!==0)return;e.preventDefault();drag={point:axis==='x'?e.clientX:e.clientY,size:Number(handle.getAttribute('aria-valuenow')),id:e.pointerId};handle.setPointerCapture(e.pointerId);};
+      handle.onpointermove=e=>{if(!drag)return;sizes[key]=clamp(drag.size+directionFor(key,direction)*((axis==='x'?e.clientX:e.clientY)-drag.point),120,2400);resize();};
       const end=()=>{if(!drag)return;drag=null;remember();};for(const event of ['pointerup','pointercancel','lostpointercapture'])handle.addEventListener(event,end);
-      handle.onkeydown=e=>{const negative=axis==='x'?'ArrowLeft':'ArrowUp',positive=axis==='x'?'ArrowRight':'ArrowDown';if(![negative,positive].includes(e.key))return;e.preventDefault();e.stopPropagation();sizes[key]+=direction*(e.key===positive?20:-20);resize();remember();};
+      handle.onkeydown=e=>{const negative=axis==='x'?'ArrowLeft':'ArrowUp',positive=axis==='x'?'ArrowRight':'ArrowDown';if(![negative,positive].includes(e.key))return;e.preventDefault();e.stopPropagation();sizes[key]=clamp(Number(handle.getAttribute('aria-valuenow'))+directionFor(key,direction)*(e.key===positive?20:-20),120,2400);resize();remember();};
     }
-    $('#studio-layout-reset').onclick=()=>{sizes={timeline:390,bin:250,inspector:260};resize();remember();};
+    $('#studio-layout-reset').onclick=()=>{sizes=state.layouts[state.selected]={...L.defaults};resize();remember();};
+    $('#studio-workspace').onchange=e=>{state.selected=e.target.value;sizes=state.layouts[state.selected];resize();remember();ctx.workspace?.(state.selected);};
     new ResizeObserver(resize).observe(editor);
-    function tab(bookmarks){$('#studio-effects-library').hidden=true;$('#studio-effects-tab').setAttribute('aria-pressed','false');$('.media-bin').scrollTop=0;$('#studio-bookmark-list').hidden=!bookmarks;$('#studio-bin-list').hidden=bookmarks;$('#studio-source-monitor').hidden=bookmarks||!source;$('#studio-sources-tab').setAttribute('aria-pressed',!bookmarks);$('#studio-bookmarks-tab').setAttribute('aria-pressed',bookmarks);if(bookmarks){pause();refresh();}}
-    $('#studio-sources-tab').onclick=()=>tab(false);$('#studio-bookmarks-tab').onclick=()=>tab(true);$('#studio-effects-tab').onclick=()=>{pause();$('#studio-effects-library').hidden=false;for(const id of ['studio-bin-list','studio-source-monitor','studio-bookmark-list'])$('#'+id).hidden=true;for(const id of ['studio-sources-tab','studio-bookmarks-tab'])$('#'+id).setAttribute('aria-pressed','false');$('#studio-effects-tab').setAttribute('aria-pressed','true');};
+    function tab(bookmarks){$('#studio-effects-library').hidden=!docked;$('#studio-effects-tab').setAttribute('aria-pressed','false');$('.media-bin').scrollTop=0;$('#studio-bookmark-list').hidden=!bookmarks;$('#studio-bin-list').hidden=bookmarks;$('#studio-source-monitor').hidden=bookmarks||!source;$('#studio-sources-tab').setAttribute('aria-pressed',!bookmarks);$('#studio-bookmarks-tab').setAttribute('aria-pressed',bookmarks);if(bookmarks){pause();refresh();}}
+    $('#studio-sources-tab').onclick=()=>tab(false);$('#studio-bookmarks-tab').onclick=()=>tab(true);$('#studio-effects-tab').onclick=()=>{pause();if(docked){$('#studio-effect-search').focus();return;}$('#studio-effects-library').hidden=false;for(const id of ['studio-bin-list','studio-source-monitor','studio-bookmark-list'])$('#'+id).hidden=true;for(const id of ['studio-sources-tab','studio-bookmarks-tab'])$('#'+id).setAttribute('aria-pressed','false');$('#studio-effects-tab').setAttribute('aria-pressed','true');};
     function refresh(){
       const r=ctx.recipe();if(!r)return;const term=$('#studio-bookmark-search').value.toLowerCase();
       $('#studio-bookmark-results').innerHTML=r.markers.map((m,index)=>({...m,index})).filter(m=>(m.label+' '+ctx.fmt(m.time)).toLowerCase().includes(term)).sort((a,b)=>a.time-b.time).map(m=>'<button class="bookmark-result secondary" data-bookmark-jump="'+m.index+'"><time>'+ctx.fmt(m.time)+'</time><span>'+esc(m.label||'Bookmark')+'</span></button>').join('')||'<p class="muted small">No matching bookmarks.</p>';

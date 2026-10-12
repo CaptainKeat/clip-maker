@@ -1,0 +1,13 @@
+const assert=require('node:assert/strict'),L=require('../clipmaker/static/studio-layout.js'),LIB=require('../clipmaker/static/studio-library.js');
+const state=L.normalize({selected:'unknown',layouts:{effects:{timeline:-1,bin:'bad',inspector:370,effects:240}}});
+assert.equal(state.selected,'editing');assert.equal(state.layouts.effects.timeline,320);assert.equal(state.layouts.effects.bin,250);
+const before=JSON.stringify(state),desktop=L.fit(state.layouts.effects,1440,800),small=L.fit(state.layouts.effects,800,385,true);
+assert.ok(small.timeline<=175);assert.equal(JSON.stringify(state),before,'Viewport fitting must preserve saved preferences');
+assert.equal(L.fit(state.layouts.effects,1440,800).inspector,desktop.inspector);state.layouts.audio.bin=300;assert.equal(state.layouts.effects.bin,250);
+assert.deepEqual(LIB.search('wespeaker splice').map(i=>i.id),['speakers']);assert.equal(LIB.search('not a real filter').length,0);
+const media={metadata:{audio_streams:[{ordinal:0}]}},tool=id=>LIB.items.find(i=>i.id===id);
+assert.equal(LIB.compatible(tool('speakers'),{type:'clips'},media),true);assert.equal(LIB.compatible(tool('speakers'),{type:'captions'},media),false);
+assert.equal(LIB.compatible(tool('speakers'),{type:'sounds'},{metadata:{audio_streams:[]}}),false);
+assert.equal(LIB.compatible(tool('transcribe'),{type:'sounds'},media),false);assert.equal(LIB.compatible(tool('duck'),{type:'sounds'},media),true);
+assert.equal(LIB.compatible(tool('pop'),{type:'captions'}),true);assert.equal(LIB.compatible(tool('frame'),{type:'overlays'}),true);
+console.log('Workspace persistence, viewport fitting, search and target compatibility passed.');

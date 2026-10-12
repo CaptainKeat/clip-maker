@@ -4,7 +4,7 @@ A Windows video editor for clips, VODs and longer videos. Manual editing works w
 
 ## Install
 
-Download `Clip-Maker-v1.5.0-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
+Download `Clip-Maker-v1.6.0-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Clip-Maker.ps1
@@ -142,3 +142,16 @@ Use **+ Video track**, **+ Audio track**, or **+ Caption track** to create a nam
 The main V1 edit stays continuous and determines sequence duration. Additional video and image tracks are timed layers within that duration; higher video tracks composite above lower tracks. Audio and caption tracks use the same duration. Add footage to V1 to extend the sequence before placing more layers. An edit supports 32 additional named tracks and up to 100 video/image layers and 100 sound pieces.
 
 Adding a video to an additional video track places its audio on a separate audio track and links the two pieces. Clicking either highlights both. Timing moves, handle trims, splits, copy/paste and removal affect the pair together; each split or pasted pair has its own link. **Unlink audio and video** makes the pieces independent. Standalone audio, images and silent videos select individually. The main V1/A1 source pieces remain linked to the same underlying edit. Undo restores track and clip changes. Copying the main edit with attached layers preserves the copied layers' links without linking them back to the originals.
+
+
+### Effects workspaces
+
+Choose **Editing**, **Effects**, **Audio** or **Captions** beside the project name. Each remembers its own panel sizes on this device. The Effects layout separates selected-clip Effect Controls, the preview, a searchable tools library, sources and the timeline. Audio and Captions start with their category selected; choose All tools & controls to browse everything. Reset layout restores the current workspace's sizes. Window resizing preserves preferred desktop sizes.
+
+Effects & tools contains supported actions: local Split speakers and transcription, audio volume/fades, ducking/crossfade controls, video framing/speed/freeze controls, caption tracking/styles and caption animation. A **Controls** entry opens an existing property; **Apply** changes a caption animation; a **Tool** starts a reviewed analysis. Drag an entry onto a compatible clip, or select a clip and click/tap it. Incompatible targets give an explanation.
+
+Split speakers opens inline in Effect Controls. Pick the source stream and speaker count, scan locally, cancel if needed, listen and rename results, then choose spliced turns or aligned tracks. Apply creates one undoable edit. Review remains attached to its original project and clip; changed source clips invalidate the result. Hide/reopen the section to retain a running scan or review. Use selected audio starts a fresh context. WeSpeaker labels speech turns and retains the original mix within them; it does not isolate simultaneous voices from the mix.
+
+Handheld mode uses Sources / Effects / Controls drawers and keeps the lower timeline available. Tap works without dragging. Panel preferences are local UI settings, separate from exported project content. Controls and timeline shortcuts retain the existing editing, linked selection, track lock and Undo semantics.
+
+Reference provenance: independently implemented UI patterns from [Adobe's Effects documentation](https://helpx.adobe.com/premiere/desktop/add-video-effects/apply-video-effects/find-and-group-effects.html) and [FilmCraft's dock source](https://github.com/storytold/filmcraft/blob/71438c627b5cbcfb550526c3971f4d0037733c5c/crates/ui-egui/src/dock.rs), pinned to 71438c627b5cbcfb550526c3971f4d0037733c5c. REA 6.4.0 verified a bounded capture of installed Premiere workspace resource declarations. Adobe resource copies stay private and are excluded from releases. No Adobe/FilmCraft implementation code or native rendering engine was copied. This provides named layouts and splitters, rather than arbitrary panel docking.
