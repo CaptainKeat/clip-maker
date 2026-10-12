@@ -70,13 +70,13 @@
   function paste(recipe,clipboard,at,ripple=true){
     if(!clipboard)throw new Error('Copy an item in Clip Maker first.');const r=clone(recipe);at=clamp(at,0,total(r));
     const pastedLinks=new Map(),relink=c=>{if(c.link_id){if(!pastedLinks.has(c.link_id))pastedLinks.set(c.link_id,id());c.link_id=pastedLinks.get(c.link_id);}return c;};
-    const c=relink(clone(clipboard.item));c.id=id();
+    const c=relink(clone(clipboard.item));delete c.group_id;c.id=id();
     if(clipboard.type==='clips'){
       let cursor=0,index=r.clips.length;
       for(let i=0;i<r.clips.length;i++){const end=cursor+duration(r.clips[i]);if(at<end-.0001){index=i;if(at>cursor+.0001){const original=r.clips[i];r.clips.splice(i,1,sliceClip(original,0,at-cursor),sliceClip(original,at-cursor,duration(original)));index=i+1;}break;}cursor=end;}
       if(r.clips.length>=500)throw new Error('The project has reached its 500-piece limit.');
       if(ripple)insertTimed(r,at,duration(c));r.clips.splice(index,0,c);
-      for(const [type,layers]of Object.entries(clipboard.layers||{}))for(const raw of layers){const v=relink(clone(raw));v.id=id();if(type==='captions'){v.start+=at;v.end+=at;v.motion=motion(v.motion,t=>t+at);}else v.time+=at;r[type].push(v);}if(r.sounds.length>100||r.overlays.length>100)throw new Error('This edit has reached its 100-layer limit.');return {recipe:r,index};
+      for(const [type,layers]of Object.entries(clipboard.layers||{}))for(const raw of layers){const v=relink(clone(raw));delete v.group_id;v.id=id();if(type==='captions'){v.start+=at;v.end+=at;v.motion=motion(v.motion,t=>t+at);}else v.time+=at;r[type].push(v);}if(r.sounds.length>100||r.overlays.length>100)throw new Error('This edit has reached its 100-layer limit.');return {recipe:r,index};
     }
     if(at>=total(r)-.04)throw new Error('Move the playhead before the end to paste a layer.');
     if(clipboard.type==='captions'){const delta=at-c.start;c.end=Math.min(total(r),at+c.end-c.start);c.start=at;c.motion=motion(c.motion,t=>t+delta);}else{c.time=at;if(c.duration)c.duration=Math.min(c.duration,total(r)-at);}
@@ -93,7 +93,7 @@
     const different=(a,b)=>JSON.stringify(a)!==JSON.stringify(b);
     for(const [key,state]of Object.entries(before.editing?.tracks||{})){
       if(!state.locked)continue;
-      const items=r=>key==='video'?r.clips:key==='audio'?r.clips.map(c=>[c.id,c.start,c.end,c.speed,c.freeze||0,c.audio,c.audio_fade_in||0,c.audio_fade_out||0]):key.startsWith('sound:')?r.sounds.filter(c=>soundKey(c)===key):key.startsWith('video:')?r.overlays.filter(c=>'video:'+(c.lane||'Overlays')===key):key.startsWith('caption:')?r.captions.filter(c=>'caption:'+(c.lane||'')===key):r[key]||[];
+      const items=r=>key==='video'?r.clips:key==='audio'?r.clips.map(c=>[c.id,c.start,c.end,c.speed,c.freeze||0,c.audio,c.audio_fade_in||0,c.audio_fade_out||0,c.disabled||false]):key.startsWith('sound:')?r.sounds.filter(c=>soundKey(c)===key):key.startsWith('video:')?r.overlays.filter(c=>'video:'+(c.lane||'Overlays')===key):key.startsWith('caption:')?r.captions.filter(c=>'caption:'+(c.lane||'')===key):r[key]||[];
       if(different(items(before),items(after))){const error=new Error('Unlock '+(key.startsWith('sound:')?key.slice(6):key)+' before editing it. Ripple edits cannot move a locked track.');error.name='TrackLockedError';throw error;}
     }
   }

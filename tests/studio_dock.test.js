@@ -1,0 +1,10 @@
+const assert=require('node:assert/strict'),D=require('../clipmaker/static/studio-dock-model.js');
+const layout=D.preset('effects'),before=JSON.stringify(layout),program=D.owner(layout,'program');
+const tabbed=D.dock(layout,'effects',program.id,'center');assert.deepEqual(D.owner(tabbed,'program').panels,['program','effects']);assert.equal(D.owner(tabbed,'effects').active,'effects');assert.equal(JSON.stringify(layout),before);
+const edged=D.dock(tabbed,'effects',D.owner(tabbed,'program').id,'bottom');assert.notEqual(D.owner(edged,'effects').id,D.owner(edged,'program').id);
+const floating=D.float(edged,'controls',{x:400,y:100,w:450,h:350});assert.equal(floating.floats.length,1);assert.equal(D.owner(floating,'controls').active,'controls');
+const closed=D.close(floating,'controls');assert.equal(closed.floats.length,0);assert.ok(closed.closed.includes('controls'));assert.ok(D.owner(D.activate(closed,'controls'),'controls'));
+const corrupted=D.normalize({tree:{kind:'split',axis:'bad',ratio:999,a:{kind:'tabs',panels:['program','evil','program']},b:{kind:'tabs',panels:['program','timeline']}}});assert.deepEqual(D.owner(corrupted,'program').panels,['program']);assert.equal(corrupted.tree.ratio,.92);
+const same=D.dock(layout,'program',program.id,'left');assert.equal(JSON.stringify(same),before);
+assert.throws(()=>D.dock(layout,'program','missing','center'));assert.ok(D.normalize(JSON.parse(JSON.stringify(floating))).floats[0]);
+console.log('Dock/tab/split/float/close/reopen, immutability and corrupted-layout recovery passed.');

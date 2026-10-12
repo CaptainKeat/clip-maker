@@ -192,7 +192,7 @@ def normalize_recipe(raw, media_list):
                 "duck":item.get('duck') is True and item.get('role')!='dialogue',
                 "duck_ratio":number(item.get('duck_ratio'),6,1,20)})
         return result
-    return {"schema":1,"clips":clips,"captions":captions,"overlays":extras("overlays"),"sounds":extras("sounds"),
+    result = {"schema":1,"clips":clips,"captions":captions,"overlays":extras("overlays"),"sounds":extras("sounds"),
         "markers":[{"time":number(m.get("time"),0,0,duration),"label":str(m.get("label") or "Bookmark")[:100]} for m in (raw.get("markers") or [])[:1000]],
         "aspect":raw.get("aspect") if raw.get("aspect") in {"source","16:9","9:16","1:1"} else "16:9",
         "resolution":int(raw.get("resolution")) if raw.get("resolution") in {720,1080,2160} else 1080,
@@ -201,6 +201,17 @@ def normalize_recipe(raw, media_list):
                    "lanes":[{'id':str(t.get('id') or '')[:80],'name':str(t.get('name') or 'Track')[:80],'kind':t['kind']} for t in (raw.get('editing') or {}).get('lanes',[])[:32] if isinstance(t,dict) and t.get('kind') in {'video','audio','caption'} and t.get('id')],
                    "tracks":{str(key)[:90]:{**{flag:value.get(flag) is True for flag in ("locked","hidden","muted","solo")},"height":number(value.get("height"),52,38,180)} for key,value in ((raw.get("editing") or {}).get("tracks") or {}).items() if isinstance(value,dict) and (key in ("video","audio","captions","overlays","bookmarks") or str(key).startswith(("sound:","video:","caption:")))},
                    "track_groups":{name:(raw.get('editing') or {}).get('track_groups',{}).get(name) is True for name in ('captions','effects','video','audio','bookmarks')}}}
+    # Preserve optional flags without changing old clip dictionaries on a no-op save.
+    for kind in ('clips','captions','overlays','sounds'):
+        source={str(c.get('id') or ''):c for c in (raw.get(kind) or []) if isinstance(c,dict)}
+        for item in result[kind]:
+            original=source.get(item['id'],{})
+            if 'disabled' in original:item['disabled']=original.get('disabled') is True
+            if original.get('group_id'):item['group_id']=str(original['group_id'])[:80]
+    from .studio_groups import normalize_groups
+    result['editing']['groups']=normalize_groups((raw.get('editing') or {}).get('groups'),result)
+    return result
+
 
 
 def clip_duration(c):

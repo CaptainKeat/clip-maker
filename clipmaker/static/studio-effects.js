@@ -21,7 +21,7 @@
       const name=names[i]?.trim()||track.name,lane=name+' · '+context.id.slice(0,6);
       const regions=layout==='turns'?(result.regions||[]).filter(region=>region.speaker===track.name):[{start:0,end:length}];
       for(const region of regions){const start=Math.max(0,region.start),end=Math.min(length,region.end);if(end-start<.04)continue;
-        tracks.push({id:makeId(),asset_id:track.asset.id,time:cursor+start,duration:end-start,source_start:start,gain_db:mix?.gain_db||0,audio_ordinal:0,role:track.name.startsWith('Speaker')?'dialogue':'other',name,lane,speaker_source:context.key,fade_in:start===0?(context.type==='sounds'?item.fade_in:item.audio_fade_in)||0:0,fade_out:end===length?(context.type==='sounds'?item.fade_out:item.audio_fade_out)||0:0});
+        tracks.push({id:makeId(),asset_id:track.asset.id,time:cursor+start,duration:end-start,source_start:start,gain_db:mix?.gain_db||0,audio_ordinal:0,role:track.name.startsWith('Speaker')?'dialogue':'other',name,lane,speaker_source:context.key,...(item.group_id?{group_id:item.group_id}:{}),...(item.disabled?{disabled:true}:{}),fade_in:start===0?(context.type==='sounds'?item.fade_in:item.audio_fade_in)||0:0,fade_out:end===length?(context.type==='sounds'?item.fade_out:item.audio_fade_out)||0:0});
       }
     }
     if(!tracks.length)throw new Error('No speaker regions are available. Choose aligned tracks or scan again.');

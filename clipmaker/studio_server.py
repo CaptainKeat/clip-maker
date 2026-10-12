@@ -66,6 +66,9 @@ def get(handler, parsed):
             "language":settings.language,"whisper_threads":settings.whisper_threads,"whisper_device":settings.whisper_device,
             "whisper_quality":settings.whisper_quality,"whisper_prompt":settings.whisper_prompt,"whisper_translate":settings.whisper_translate,
             "lmstudio_api_url":settings.lmstudio_api_url,"lmstudio_model":settings.lmstudio_model})
+    elif path == '/studio/workspaces':
+        from . import studio_workspaces
+        handler._json(studio_workspaces.read(settings))
     elif path == "/studio/assets": handler._json(studio.assets(settings))
     elif path == '/studio/speakers':handler._json(studio_speakers.status())
     elif (m:=re.fullmatch(r'/studio/speakers/([a-f0-9]{32})',path)):handler._json(studio_speakers.result(settings,m[1]))
@@ -119,7 +122,11 @@ def post(handler, parsed, start_job, jobs, jobs_lock):
         handler._json(receive(settings,handler.rfile,name,length))
         return True
     body = handler._body()
-    if (m:=re.fullmatch(r'/studio/projects/([a-f0-9]{32})/speakers',path)):
+    if path == '/studio/workspaces/save':
+        from . import studio_workspaces
+        if type(body.get('revision')) is not int:raise ValueError('A workspace revision is required')
+        handler._json(studio_workspaces.save(settings,body.get('state'),body['revision']))
+    elif (m:=re.fullmatch(r'/studio/projects/([a-f0-9]{32})/speakers',path)):
         import uuid
         from dataclasses import replace
         p=studio.project(settings,m[1]);clip_id=str(body.get('clip_id',''));ordinal=int(body.get('audio_ordinal',0));count=int(body.get('speakers',0))

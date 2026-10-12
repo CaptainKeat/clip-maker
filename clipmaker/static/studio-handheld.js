@@ -4,8 +4,8 @@
     const $=s=>document.querySelector(s),key='clipmaker-handheld-v1';
     let mode=localStorage.getItem(key)||'auto',drawer='',padTimer=null,lastButtons=[],lastNav=0;
     const control=$('#studio-handheld-mode'),editor=$('#studio-editor');
-    function show(value){drawer=value;editor.dataset.drawer=drawer;for(const name of ['sources','effects','inspector'])$('#handheld-'+name).setAttribute('aria-pressed',drawer===name);if(drawer==='effects')$('#studio-effects-tab').click();else if(drawer==='sources')$('#studio-sources-tab').click();}
-    function panel(value){show(drawer===value?'':value);}
+    function show(value){drawer=value;editor.dataset.drawer=drawer;for(const name of ['sources','effects','inspector'])$('#handheld-'+name).setAttribute('aria-pressed',drawer===name);if(drawer==='effects')$('#studio-effects-tab').click();else if(drawer==='sources')$('#studio-sources-tab').click();ctx.layout();}
+    function panel(value){show(editor.dataset.drawer===value?'':value);}
     function update(){const on=mode==='on'||mode==='auto'&&(innerWidth<=1280&&innerHeight<=800||matchMedia('(pointer:coarse)').matches&&innerWidth<=1920);document.body.classList.toggle('handheld',on);$('#studio-handheld-tools').hidden=!on;control.value=mode;ctx.layout();}
     control.onchange=()=>{mode=control.value;localStorage.setItem(key,mode);update();};
     for(const name of ['sources','effects','inspector'])$('#handheld-'+name).onclick=()=>panel(name);

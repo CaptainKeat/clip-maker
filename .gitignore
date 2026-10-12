@@ -11,6 +11,7 @@ __pycache__/
 /clipmaker.json
 provider-credentials.json
 settings.json
+studio-workspaces*.json
 /third_party/ffmpeg/bin/
 *.db
 *.db-wal

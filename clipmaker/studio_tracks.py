@@ -29,5 +29,10 @@ def export_view(recipe):
     legacy=list(dict.fromkeys(c.get('lane') or 'Overlays' for c in recipe.get('overlays',[]) if (c.get('lane') or 'Overlays') not in saved))
     order=legacy+saved
     result['overlays'].sort(key=lambda c:order.index(c.get('lane') or 'Overlays'))
-    result['sounds'] = [s for s in result['sounds'] if audible(recipe, 'sound:' + (s.get('lane') or 'Audio'))]
+    result['sounds'] = [s for s in result['sounds'] if not s.get('disabled') and audible(recipe, 'sound:' + (s.get('lane') or 'Audio'))]
+    result['captions']=[c for c in result['captions'] if not c.get('disabled')]
+    result['overlays']=[c for c in result['overlays'] if not c.get('disabled')]
+    for clip in result['clips']:
+        if clip.get('disabled'):
+            for stream in clip['audio']:stream['enabled']=False
     return result
