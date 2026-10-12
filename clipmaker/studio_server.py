@@ -95,6 +95,12 @@ def post(handler, parsed, start_job, jobs, jobs_lock):
     path = parsed.path
     settings = handler.settings
     if not path.startswith("/studio/"): return False
+    if path == "/studio/upload":
+        from .studio_upload import receive
+        name=urllib.parse.parse_qs(parsed.query).get('name',[''])[0]
+        length=int(handler.headers.get('Content-Length','0'))
+        handler._json(receive(settings,handler.rfile,name,length))
+        return True
     body = handler._body()
     if path == "/studio/import":
         handler._json(studio.import_media(settings,body.get("path")))

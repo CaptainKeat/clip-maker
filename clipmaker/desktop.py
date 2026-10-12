@@ -26,6 +26,7 @@ def main():
     from .settings import Settings, load_settings, save_settings
     from .server import ClipMakerHandler, JOBS, JOBS_LOCK
     from . import __version__
+    from .desktop_drop import DesktopDropFilter
 
     settings_path = data_root/"settings.json"
     if not settings_path.exists():
@@ -102,6 +103,12 @@ def main():
     if icon.exists(): window.setWindowIcon(QIcon(str(icon)))
     view = QWebEngineView(window)
     page = Page(view);view.setPage(page)
+    view.setAcceptDrops(True)
+    def notify_drop(kind,payload):
+        function={'drag':'studioNativeDrag','drop':'studioNativeDrop','leave':'studioNativeLeave'}[kind]
+        page.runJavaScript('window.'+function+' && window.'+function+'('+json.dumps(payload)+')')
+    drop_filter=DesktopDropFilter(view,notify_drop,window)
+    app.installEventFilter(drop_filter)
     page.settings().setAttribute(QWebEngineSettings.WebAttribute.PlaybackRequiresUserGesture,False)
     channel = QWebChannel(page);channel.registerObject("desktop",bridge);page.setWebChannel(channel)
     channel_source = QFile(":/qtwebchannel/qwebchannel.js")

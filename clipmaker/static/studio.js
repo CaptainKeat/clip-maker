@@ -1,7 +1,7 @@
 (() => {
   "use strict";
   const $=s=>document.querySelector(s), M=window.MotionCaptions;
-  const S={assets:[],projects:[],project:null,time:0,selection:null,history:[],future:[],dirty:0,saved:0,saveTimer:null,saving:null,zoom:10,playing:false,proxy:new Map(),job:null,tracking:false,picking:false,box:null,drag:null,loadedClip:null,loadedUrl:null,seekGeneration:0,soundNodes:new Map(),overlayNodes:new Map(),captionNodes:new Map(),buildingProxy:false};
+  const S={assets:[],projects:[],project:null,time:0,selection:null,history:[],future:[],dirty:0,saved:0,saveTimer:null,saving:null,zoom:10,playing:false,proxy:new Map(),job:null,tracking:false,picking:false,box:null,drag:null,loadedClip:null,loadedUrl:null,seekGeneration:0,soundNodes:new Map(),overlayNodes:new Map(),captionNodes:new Map(),buildingProxy:false,importing:false,cancelImport:false,upload:null};
   const copy=v=>JSON.parse(JSON.stringify(v));
   const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
@@ -29,14 +29,14 @@
     }).catch(error=>{$("#studio-save-state").textContent="Save needs attention";throw error;}).finally(()=>{S.saving=null;});
     await S.saving;if(S.project===p&&S.dirty!==S.saved)return save();
   }
-  window.studioFlush=save;
+  window.studioFlush=()=>S.importing?Promise.reject(new Error("Finish or cancel the media import before closing.")):save();
   async function refreshAssets(){S.assets=await api("/studio/assets");mediaCards();bin();}
   async function loadProjects(){S.projects=await api("/studio/projects");$("#studio-project-grid").innerHTML=S.projects.length?S.projects.map(p=>{
     const a=asset(p.recipe.clips[0]?.asset_id),seconds=p.recipe.clips.reduce((n,c)=>n+duration(c),0);
     return '<article class="project-card"><button data-project="'+p.id+'"><div class="project-cover">'+(a?'<img loading="lazy" src="'+a.thumbnail+'" alt="">':'▷')+'</div><div class="card-copy"><strong>'+esc(p.name)+'</strong><small>'+fmt(seconds)+' · '+p.recipe.clips.length+' video pieces</small><small>Saved '+esc(p.updated_at)+'</small></div></button></article>';
   }).join(""):'<div class="empty-state"><h2>Your next edit starts here.</h2><p>Import a video, then create a project. AI is optional.</p><button data-new-project>Start a project</button></div>';}
-  function mediaCards(){const search=$("#studio-search").value.toLowerCase();$("#studio-media-grid").innerHTML=S.assets.filter(a=>a.name.toLowerCase().includes(search)).map(a=>'<article class="media-card">'+(a.kind!=="audio"?'<img loading="lazy" src="'+a.thumbnail+'" alt="">':'<div class="project-cover">♫</div>')+'<div class="card-copy"><strong>'+esc(a.name)+'</strong><small>'+a.kind+' · '+fmt(a.metadata.duration_sec)+'</small></div><div class="media-actions">'+(a.kind==="video"?'<button data-open-media="'+a.id+'">Open in editor</button>':'')+'</div></article>').join("")||'<div class="empty-state">Import videos, audio or images to build your media library.</div>';}
-  function bin(){if(!S.project)return;$("#studio-bin-list").innerHTML=S.assets.map(a=>'<article class="bin-item">'+(a.kind!=="audio"?'<img loading="lazy" src="'+a.thumbnail+'" alt="">':'')+'<strong title="'+esc(a.name)+'">'+esc(a.name)+'</strong><div>'+(a.kind==="video"?'<button data-add-video="'+a.id+'">+ Video</button>':'')+(a.kind!=="audio"?'<button class="secondary" data-add-overlay="'+a.id+'">+ Overlay</button>':'')+(a.kind!=="image"&&a.metadata.audio_streams.length?'<button class="secondary" data-add-sound="'+a.id+'">+ Audio</button>':'')+'</div></article>').join("")||'<p class="empty-note">Import media to begin.</p>';}
+  function mediaCards(){const search=$("#studio-search").value.toLowerCase();$("#studio-media-grid").innerHTML=S.assets.filter(a=>a.name.toLowerCase().includes(search)).map(a=>'<article class="media-card" draggable="true" data-drag-asset="'+a.id+'">'+(a.kind!=="audio"?'<img loading="lazy" src="'+a.thumbnail+'" alt="">':'<div class="project-cover">♫</div>')+'<div class="card-copy"><strong>'+esc(a.name)+'</strong><small>'+a.kind+' · '+fmt(a.metadata.duration_sec)+'</small></div><div class="media-actions">'+(a.kind==="video"?'<button data-open-media="'+a.id+'">Open in editor</button>':'')+'</div></article>').join("")||'<div class="empty-state">Import videos, audio or images to build your media library.</div>';}
+  function bin(){if(!S.project)return;$("#studio-bin-list").innerHTML=S.assets.map(a=>'<article class="bin-item" draggable="true" data-drag-asset="'+a.id+'">'+(a.kind!=="audio"?'<img loading="lazy" src="'+a.thumbnail+'" alt="">':'')+'<strong title="'+esc(a.name)+'">'+esc(a.name)+'</strong><div>'+(a.kind==="video"?'<button data-add-video="'+a.id+'">+ Video</button>':'')+(a.kind!=="audio"?'<button class="secondary" data-add-overlay="'+a.id+'">+ Overlay</button>':'')+(a.kind!=="image"&&a.metadata.audio_streams.length?'<button class="secondary" data-add-sound="'+a.id+'">+ Audio</button>':'')+'</div></article>').join("")||'<p class="empty-note">Import media to begin.</p>';}
   async function page(name){
     if(S.tracking)return message("Cancel tracking before changing pages.");
     if(S.project&&name!=="editor"){S.playing=false;$("#studio-video").pause();for(const n of S.soundNodes.values())n.pause();for(const n of S.overlayNodes.values())if(n.pause)n.pause();await save();}
@@ -58,8 +58,84 @@
   }
   function addVideo(id){if(!S.project)return;const a=asset(id);snapshot();recipe().clips.push({id:crypto.randomUUID(),asset_id:a.id,start:0,end:a.metadata.duration_sec,speed:1,freeze:0,transition:"none",fit:"fit",audio:a.metadata.audio_streams.map(t=>({ordinal:t.ordinal,enabled:t.ordinal===0,gain_db:0}))});S.selection={type:"clips",index:recipe().clips.length-1};change();timeline();inspector();seek(total()-duration(selected()));}
   function addLayer(id,type){if(!S.project||!total())return message("Add a video first.");const a=asset(id);snapshot();recipe()[type].push({id:crypto.randomUUID(),asset_id:a.id,time:S.time,duration:Math.min(total()-S.time,a.metadata.duration_sec||3),x:50,y:50,size:.35,gain_db:0});S.selection={type,index:recipe()[type].length-1};change();timeline();inspector();}
-  async function imports(paths){for(const path of paths){await api("/studio/import",{path});}await refreshAssets();message("Media imported. Originals stay in their existing folders.");if(!S.project||$("#studio-editor").hidden)await page("library");}
-  function importDialog(){if(window.desktopBridge){window.desktopBridge.pickMedia();return;}$("#studio-import-path").value="";$("#studio-import-dialog").showModal();}
+  const ASSET_DROP="application/x-clipmaker-asset";
+  let dropHighlight=null;
+  function dropDestination(node){
+    const card=node?.closest("[data-project]");
+    if(card)return {kind:"project",id:card.dataset.project,node:card.closest(".project-card")};
+    const zone=node?.closest("[data-drop-zone]");
+    if(zone?.dataset.dropZone==="new")return {kind:"new",node:zone};
+    if(zone?.dataset.dropZone==="library")return {kind:"library",node:zone};
+    if(zone?.dataset.dropZone==="timeline"&&S.project)return {kind:"timeline",id:S.project.id,time:S.time,lane:node.closest(".timeline-track")?.id,node:zone};
+    return {kind:"library",node:$(".studio-main")};
+  }
+  function clearDrop(){dropHighlight?.classList.remove("drop-active");dropHighlight=null;$("#studio-drop-hint").hidden=true;}
+  function showDrop(destination){
+    if(S.tracking||S.importing){clearDrop();return;}
+    if(dropHighlight!==destination.node){dropHighlight?.classList.remove("drop-active");dropHighlight=destination.node;dropHighlight?.classList.add("drop-active");}
+    $("#studio-drop-hint").textContent=destination.kind==="new"?"Drop to start a project":destination.kind==="project"?"Drop to add media to this project":destination.kind==="timeline"?(destination.lane==="studio-sound-track"?"Drop to add a soundtrack":destination.lane==="studio-overlay-track"?"Drop to add an overlay":"Drop to add video, images or audio to your edit"):"Drop to import into your media library";
+    $("#studio-drop-hint").hidden=false;
+  }
+  function uploadFile(file){return new Promise((resolve,reject)=>{
+    const request=new XMLHttpRequest();S.upload=request;
+    request.open("POST","/studio/upload?name="+encodeURIComponent(file.name));request.setRequestHeader("Content-Type","application/octet-stream");
+    request.upload.onprogress=e=>{if(e.lengthComputable)$("#studio-import-progress").value=Math.round(e.loaded/e.total*100);};
+    request.onload=()=>{S.upload=null;try{const body=JSON.parse(request.responseText);if(request.status>=400)reject(new Error(body.error||"Import failed"));else resolve(body);}catch{reject(new Error("The local import did not return a valid result"));}};
+    request.onerror=()=>{S.upload=null;reject(new Error("The local media import connection stopped"));};
+    request.onabort=()=>{S.upload=null;reject(new Error("Import cancelled. Completed imports remain in the media library."));};
+    request.send(file);
+  });}
+  async function dropMedia(input,destination){
+    clearDrop();if(S.importing)return message("A media import is already running.");if(S.tracking)return message("Cancel tracking before importing media.");
+    S.importing=true;try{await save();}catch(e){S.importing=false;message(e.message,true);return;}S.cancelImport=false;$("#studio-root").inert=true;$("#studio-import-toast").hidden=false;
+    S.playing=false;$("#studio-video").pause();for(const n of S.soundNodes.values())n.pause();for(const n of S.overlayNodes.values())if(n.pause)n.pause();
+    const imported=[],errors=[],items=[...(input.paths||[]).map(path=>({path,name:path.split(/[\\/]/).pop()})),...(input.files||[]).map(file=>({file,name:file.name}))];
+    try{
+      for(const [index,item]of items.entries()){
+        if(S.cancelImport)break;$("#studio-import-title").textContent="Importing "+(index+1)+" of "+items.length+": "+item.name;$("#studio-import-progress").value=0;
+        try{const a=item.path?await api("/studio/import",{path:item.path}):await uploadFile(item.file);imported.push(a);}catch(e){if(S.cancelImport)break;errors.push(item.name+": "+e.message);}
+      }
+      await refreshAssets();
+      for(const id of input.ids||[]){const a=asset(id);if(a)imported.push(a);}
+      if(S.cancelImport){message("Import cancelled. Completed imports remain in the media library.");return;}
+      if(!imported.length){message(errors.join(" · ")||"Drop video, audio or image files.",true);return;}
+      const importedCount=imported.length;
+      if(destination.kind==="library"){if($("#studio-editor").hidden)await page("library");}
+      else{
+        const videos=imported.filter(a=>a.kind==="video");
+        if(destination.kind==="new"){
+          if(!videos.length){await page("library");message("Media imported. Add a video to start a project.");return;}
+          await create(videos[0].id);imported.splice(imported.indexOf(videos[0]),1);destination.time=0;
+        }else if(destination.id!==S.project?.id||$("#studio-editor").hidden)await open(destination.id);
+        const at=clamp(destination.time||0,0,Math.max(0,total()-.04));
+        for(const a of imported){
+          if(a.kind==="video"&&!['studio-sound-track','studio-overlay-track'].includes(destination.lane))addVideo(a.id);
+        }
+        S.time=at;
+        for(const a of imported){
+          if(a.kind==="image"||(a.kind==="video"&&destination.lane==="studio-overlay-track")){if(total())addLayer(a.id,"overlays");}
+          else if(a.kind==="audio"||(a.kind==="video"&&destination.lane==="studio-sound-track")){if(total()&&a.metadata.audio_streams.length)addLayer(a.id,"sounds");}
+        }
+        if(!total())errors.push("Add a video before placing overlays or soundtracks.");
+        seek(at);await save();
+      }
+      message(importedCount+" media file(s) imported"+(window.desktopBridge?". Originals stay in place.":items.length?". Browser imports are saved locally.":".")+(errors.length?" · "+errors.join(" · "):""),!!errors.length);
+    }catch(e){await refreshAssets().catch(()=>{});message(e.message,true);}
+    finally{S.importing=false;$("#studio-root").inert=false;$("#studio-import-toast").hidden=true;S.upload=null;}
+  }
+  window.studioNativeDrag=payload=>showDrop(dropDestination(document.elementFromPoint(payload.x,payload.y)));
+  window.studioNativeLeave=clearDrop;
+  window.studioNativeDrop=payload=>dropMedia({paths:payload.paths},dropDestination(document.elementFromPoint(payload.x,payload.y)));
+  function isMediaDrag(event){return [...(event.dataTransfer?.types||[])].some(t=>t==="Files"||t===ASSET_DROP);}
+  document.addEventListener("dragover",event=>{if(!isMediaDrag(event))return;event.preventDefault();event.dataTransfer.dropEffect="copy";showDrop(dropDestination(event.target));});
+  document.addEventListener("dragleave",event=>{if(!event.relatedTarget)clearDrop();});
+  document.addEventListener("dragend",clearDrop);
+  document.addEventListener("dragstart",event=>{const item=event.target.closest("[data-drag-asset]");if(!item)return;event.dataTransfer.setData(ASSET_DROP,item.dataset.dragAsset);event.dataTransfer.effectAllowed="copy";});
+  document.addEventListener("drop",event=>{if(!isMediaDrag(event))return;event.preventDefault();const id=Number(event.dataTransfer.getData(ASSET_DROP));dropMedia({files:[...event.dataTransfer.files],ids:id?[id]:[]},dropDestination(event.target));});
+  $("#studio-import-cancel").onclick=()=>{S.cancelImport=true;S.upload?.abort();};
+  async function imports(paths){await dropMedia({paths},{kind:"library"});}
+  function importDialog(){if(window.desktopBridge){window.desktopBridge.pickMedia();return;}$("#studio-import-path").value="";$("#studio-import-files").value="";$("#studio-import-dialog").showModal();}
+  $("#studio-import-files").onchange=async e=>{const files=[...e.target.files];$("#studio-import-dialog").close();if(files.length)await dropMedia({files},{kind:"library"});};
   if(window.qt&&window.QWebChannel)new QWebChannel(qt.webChannelTransport,channel=>{window.desktopBridge=channel.objects.desktop;desktopBridge.filesSelected.connect(paths=>imports(JSON.parse(paths)).catch(e=>message(e.message,true)));});
   function frame(){if(!S.project)return [1920,1080];const r=recipe();if(r.aspect==="source"&&r.clips[0]){const m=asset(r.clips[0].asset_id).metadata;return [m.width,m.height];}const v=Number(r.resolution)||1080;return r.aspect==="9:16"?[v,Math.floor(v*16/9/2)*2]:r.aspect==="1:1"?[v,v]:[Math.floor(v*16/9/2)*2,v];}
   function layout(){const area=$(".program-area"),stage=$("#studio-stage"),[w,h]=frame();const scale=Math.min(area.clientWidth/w,area.clientHeight/h);stage.style.width=Math.max(1,w*scale)+"px";stage.style.height=Math.max(1,h*scale)+"px";$("#studio-frame-label").textContent=w+" × "+h;const at=locate(S.time),v=$("#studio-video");if(at&&v.videoWidth){const g=M.geometry(v.videoWidth,v.videoHeight,{mode:at.c.fit},stage.clientWidth,stage.clientHeight);Object.assign(v.style,{left:g.x+"px",top:g.y+"px",width:g.w+"px",height:g.h+"px"});}}
@@ -148,7 +224,7 @@
   $("#studio-scrub").oninput=e=>{S.playing=false;$("#studio-video").pause();seek(Number(e.target.value));};
   $("#studio-video").onended=()=>{if(!S.playing)return;const at=locate(S.time);if(!at)return;if(S.previewOffset+$("#studio-video").duration<at.c.end-.05){seek(S.time+.05);$("#studio-proxy").click();}else if(at.c.freeze>0){S.time=at.cursor+(at.c.end-at.c.start)/at.c.speed;}else if(at.i+1<recipe().clips.length){seek(at.cursor+duration(at.c)+.001);}else{S.playing=false;S.time=total();draw();}};
   $("#studio-video").onerror=()=>{if(S.loadedUrl?.includes('proxy-media'))message("Preview could not play. Try another file or regenerate the preview copy.",true);else $("#studio-proxy").click();};
-  $("#studio-proxy").onclick=async()=>{const at=locate(S.time),project_=S.project;if(!at||S.buildingProxy)return;S.buildingProxy=true;S.playing=false;$("#studio-video").pause();try{const body={asset_id:at.c.asset_id,start:at.source,mix:copy(at.c.audio),webm:true};let result=await api("/studio/proxy",body);if(!result.ready){message("Preparing a compatible preview window with your selected audio tracks…");for(;;){await new Promise(r=>setTimeout(r,1000));const jobs=await api("/api/jobs"),j=jobs[result.job_id];if(j?.status==="error")throw new Error(j.detail||j.error);if(j?.status==="complete")break;}result=await api("/studio/proxy",body);}if(S.project!==project_)return;S.proxy.set(at.c.asset_id,{url:result.url,offset:result.offset,mix:JSON.stringify(body.mix)});seek(S.time);message("Preview ready. Exports use the original footage and selected audio tracks.");}catch(e){message(e.message,true);}finally{S.buildingProxy=false;}};
+  $("#studio-proxy").onclick=async()=>{const at=locate(S.time),project_=S.project;if(!at||S.buildingProxy)return;const requestMix=JSON.stringify(at.c.audio);S.buildingProxy=true;S.playing=false;$("#studio-video").pause();try{const body={asset_id:at.c.asset_id,start:at.source,mix:copy(at.c.audio),webm:true};let result=await api("/studio/proxy",body);if(!result.ready){message("Preparing a compatible preview window with your selected audio tracks…");for(;;){await new Promise(r=>setTimeout(r,1000));const jobs=await api("/api/jobs"),j=jobs[result.job_id];if(j?.status==="error")throw new Error(j.detail||j.error);if(j?.status==="complete")break;}result=await api("/studio/proxy",body);}if(S.project!==project_)return;S.proxy.set(at.c.asset_id,{url:result.url,offset:result.offset,mix:JSON.stringify(body.mix)});seek(S.time);message("Preview ready. Exports use the original footage and selected audio tracks.");}catch(e){message(e.message,true);}finally{S.buildingProxy=false;const current=locate(S.time);if(current&&!$("#studio-editor").hidden&&(S.project!==project_||current.c.asset_id!==at.c.asset_id||JSON.stringify(current.c.audio)!==requestMix||Math.floor(current.source/60)!==Math.floor(at.source/60)))seek(S.time);}};
   $("#studio-split").onclick=split;$("#studio-delete").onclick=remove;$("#studio-add-caption").onclick=addCaption;$("#studio-add-marker").onclick=marker;$("#studio-zoom").oninput=e=>{S.zoom=Number(e.target.value);timeline();};
   $("#studio-timeline").onclick=e=>{if(S.tracking)return;const piece=e.target.closest(".timeline-piece");if(piece){select(piece.dataset.type,piece.dataset.index);const c=selected();let t=c.start??c.time??0;if(S.selection.type==="clips")t=recipe().clips.slice(0,S.selection.index).reduce((n,c)=>n+duration(c),0);seek(t);}else if(e.target.closest("#studio-ruler")){const r=$("#studio-ruler").getBoundingClientRect();seek((e.clientX-r.left)/S.zoom);}};
   $("#studio-timeline").onpointerdown=e=>{const handle=e.target.closest(".trim-handle"),piece=e.target.closest(".timeline-piece");if(!handle||!piece||S.tracking)return;e.preventDefault();e.stopPropagation();select("clips",piece.dataset.index);snapshot();S.drag={kind:"trim",x:e.clientX,start:selected().start,end:selected().end,index:S.selection.index,left:handle.classList.contains("left")};$("#studio-timeline").setPointerCapture(e.pointerId);};
@@ -203,7 +279,7 @@
   function tick(now){const elapsed=(now-lastTick)/1000;lastTick=now;if(S.project&&!$("#studio-editor").hidden){const v=$("#studio-video"),at=locate(S.time);if(S.playing&&at){const played=(at.c.end-at.c.start)/at.c.speed;if(S.time-at.cursor>=played){v.pause();S.time+=elapsed;if(S.time>=at.cursor+duration(at.c)){if(S.time>=total()){S.playing=false;S.time=total();}else seek(at.cursor+duration(at.c)+.001);}}else if(v.readyState>=2&&!v.paused){S.time=at.cursor+(v.currentTime+(S.previewOffset||0)-at.c.start)/at.c.speed;if(S.time>=at.cursor+played-.02&&!(at.c.freeze>0)){if(S.time>=total()-.04){S.playing=false;v.pause();S.time=total();}else seek(at.cursor+duration(at.c)+.001);}}}draw();}requestAnimationFrame(tick);}requestAnimationFrame(tick);
   new ResizeObserver(layout).observe($(".program-area"));
   setInterval(async()=>{try{if(S.job){const jobs=await api("/api/jobs"),j=jobs[S.job];if(j){$("#studio-job-title").textContent=j.status==="complete"?"Export ready":j.status==="error"?"Export needs attention":"Exporting video";$("#studio-job-detail").textContent=j.status==="complete"?"Your new video is in Exports.":j.detail||j.stage;$("#studio-job-progress").value=j.progress||0;if(["complete","error"].includes(j.status)){$("#studio-job-cancel").hidden=true;S.job=null;if(j.status==="error")message(j.detail||j.error,true);setTimeout(()=>$("#studio-job").hidden=true,6000);}}}if(!$("#settings-updates").hidden)await updates();}catch(e){console.warn(e.message);}},1000);
-  document.addEventListener("keydown",e=>{if(!S.project||$("#studio-editor").hidden||e.target.matches("input,textarea,select")||document.querySelector("dialog[open]"))return;if(S.tracking){if(e.key==="Escape")S.cancelTrack=true;return;}const key_=e.key.toLowerCase();if((e.ctrlKey||e.metaKey)&&key_==="s"){e.preventDefault();save().catch(err=>message(err.message,true));}else if((e.ctrlKey||e.metaKey)&&key_==="z"){e.preventDefault();$(e.shiftKey?"#studio-redo":"#studio-undo").click();}else if((e.ctrlKey||e.metaKey)&&key_==="k"){e.preventDefault();split();}else if(e.code==="Space"){e.preventDefault();$("#studio-play").click();}else if(e.key==="Delete"){e.preventDefault();remove();}else if(key_==="m")marker();});
-  window.addEventListener("beforeunload",e=>{if(S.project&&S.dirty!==S.saved){remember();e.preventDefault();e.returnValue="";}});
+  document.addEventListener("keydown",e=>{if(S.importing||!S.project||$("#studio-editor").hidden||e.target.matches("input,textarea,select")||document.querySelector("dialog[open]"))return;if(S.tracking){if(e.key==="Escape")S.cancelTrack=true;return;}const key_=e.key.toLowerCase();if((e.ctrlKey||e.metaKey)&&key_==="s"){e.preventDefault();save().catch(err=>message(err.message,true));}else if((e.ctrlKey||e.metaKey)&&key_==="z"){e.preventDefault();$(e.shiftKey?"#studio-redo":"#studio-undo").click();}else if((e.ctrlKey||e.metaKey)&&key_==="k"){e.preventDefault();split();}else if(e.code==="Space"){e.preventDefault();$("#studio-play").click();}else if(e.key==="Delete"){e.preventDefault();remove();}else if(key_==="m")marker();});
+  window.addEventListener("beforeunload",e=>{if(S.importing||(S.project&&S.dirty!==S.saved)){remember();e.preventDefault();e.returnValue="";}});
   Promise.all([refreshAssets(),settings()]).then(async()=>{await loadProjects();const id=new URLSearchParams(location.search).get("project");if(id)await open(id);window.studioReady=true;}).catch(e=>{window.studioError=e.message;message(e.message,true);});
 })();

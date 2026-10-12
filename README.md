@@ -4,7 +4,7 @@ A Windows video editor for clips, VODs and longer videos. Manual editing works w
 
 ## Install
 
-Download `Clip-Maker-v1.0.0-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
+Download `Clip-Maker-v1.0.1-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Clip-Maker.ps1
@@ -21,6 +21,10 @@ Settings and projects live under `%LOCALAPPDATA%\ClipMaker`; app files live unde
 3. Use the inspector for speed, fit/fill, freeze endings and fades. Select and balance individual OBS audio tracks.
 4. Type captions, place them over a person, and add position keys or Pop, Shake, Grow or Fall effects. Images and videos can be overlays; audio can be a soundtrack.
 5. **Export video** chooses original dimensions, landscape, portrait or square; 720p, 1080p or 2160p; and quality. Follow progress or cancel. Finished and failed exports remain listed.
+
+Drag files from Windows Explorer onto **Projects** to start an edit, an existing project card to append media, or the **media bin** to import without changing the edit. Drop on the editor to append video clips and place images or audio at the playhead; the overlay and audio lanes accept their respective media. Media already in the bin can also be dragged onto the editor. Multiple files are supported with import progress and cancellation.
+
+The installed app links original files in place. Browser drops and the browser file picker stream copies into private local storage on this PC. Interrupted copies and completed imports are retained when an import is cancelled. Move or rename linked originals only after exporting or restoring their saved paths.
 
 Projects autosave. Undo/redo is available during the editing session. Concurrent saves from another window are rejected to protect the saved edit. A local draft is retained when a save fails.
 
@@ -40,13 +44,13 @@ The desktop uses cached VP9/Opus preview windows near the playhead because its b
 
 ## Optional AI
 
-AI tools start **Off**. Manual editing, typed captions, tracking and export never require model inference. Settings → AI tools enables the existing highlight-finding and automatic-caption workflow and lets you configure an external Whisper executable/model and local model-server URL. Enabling AI does not load a model. The Windows app opens this workflow in the default browser; keep Clip Maker running while using it.
+AI tools start **Off**. Manual editing, typed captions, tracking and export never require model inference. Settings â†’ AI tools enables the existing highlight-finding and automatic-caption workflow and lets you configure an external Whisper executable/model and local model-server URL. Enabling AI does not load a model. The Windows app opens this workflow in the default browser; keep Clip Maker running while using it.
 
 No model weights, recordings, credentials or publishing configuration are shipped. Whisper.cpp and LM Studio are optional external tools. The source-only Parakeet integration needs its separate Python/runtime dependencies; the Windows package uses the external Whisper path.
 
 ## Updates
 
-Settings → **Updates** checks stable releases from `CaptainKeat/clip-maker`, shows notes, and offers **Download update** followed by **Install & restart**. Downloads must match GitHub's size and SHA-256 digest. A separate hidden helper waits for the app to exit, preserves the previous installation, swaps files, and waits for the new app's UI readiness signal. Failed starts restore the previous app. Updates preserve user data and original media. Installation waits for exports to finish and saves pending edits first.
+Settings â†’ **Updates** checks stable releases from `CaptainKeat/clip-maker`, shows notes, and offers **Download update** followed by **Install & restart**. Downloads must match GitHub's size and SHA-256 digest. A separate hidden helper waits for the app to exit, preserves the previous installation, swaps files, and waits for the new app's UI readiness signal. Failed starts restore the previous app. Updates preserve user data and original media. Installation waits for exports to finish and saves pending edits first.
 
 Portable copies need a writable parent directory. Update downloads, helper logs and receipts are retained under the private data directory.
 

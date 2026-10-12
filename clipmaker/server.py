@@ -455,7 +455,8 @@ class ClipMakerHandler(BaseHTTPRequestHandler):
                 chunk = handle.read(min(1024 * 1024, remaining))
                 if not chunk:
                     break
-                self.wfile.write(chunk)
+                try: self.wfile.write(chunk)
+                except ConnectionError: return  # Preview changes can cancel a media response.
                 remaining -= len(chunk)
 
     def do_GET(self) -> None:
