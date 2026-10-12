@@ -4,7 +4,7 @@ A Windows video editor for clips, VODs and longer videos. Manual editing works w
 
 ## Install
 
-Download `Clip-Maker-v1.1.0-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
+Download `Clip-Maker-v1.1.1-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Clip-Maker.ps1
@@ -34,7 +34,7 @@ Full source durations are retained. There is no short-clip duration cap. The fir
 
 ## Manual editing tools
 
-Select a video piece and choose its audio track, then **Build waveform**. Peaks are cached locally and can be cancelled; use the whole-edit audio overview to seek. Compatible preview windows are cached in memory (up to eight) and on disk; still-frame previews respond while a new desktop window is prepared. Only visible timeline pieces are drawn at high zoom for long VODs.
+Select a video piece and choose its audio track, then **Build waveform**. Peaks are cached locally and can be cancelled; use the whole-edit audio overview to seek. Compatible preview windows are cached in memory (up to eight) and on disk; still-frame previews respond while a new desktop window is prepared. Only visible timeline pieces are drawn at high zoom for long VODs. Drag the red playhead line or triangle, click and drag the ruler, empty lanes or video pieces, or drag the audio overview to scrub. Playback pauses while scrubbing. Hold near a timeline edge to scroll further. Focus the playhead and use Left/Right for frame steps, Shift+Left/Right for one-second steps, or Home/End for the beginning/end.
 
 **Ripple layers** makes clip trims and removals move captions, overlays, soundtracks and bookmarks with the footage. Mark **I** and **O**, then **Ripple cut range** to remove a section. Copy a clip with its attached layers and paste it at the playhead; paste splits the destination clip. Copy/paste also works on individual captions and layers. Undo restores each edit. **Snap** aligns timeline drags with nearby edges, bookmarks and the playhead; hold Shift to bypass snapping. The video lane remains continuous when Ripple layers is off.
 
