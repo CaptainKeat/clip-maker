@@ -1,10 +1,11 @@
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.StudioDockModel=api;})(typeof window==='undefined'?globalThis:window,()=>{
   'use strict';
-  const panels=['sources','source','program','controls','effects','bookmarks','timeline'],names={sources:'Sources',source:'Source preview',program:'Program',controls:'Effect Controls',effects:'Effects',bookmarks:'Bookmarks',timeline:'Timeline'};
+  const panels=['sources','source','program','controls','effects','bookmarks','timeline','tools','meters'],names={sources:'Project',source:'Source',program:'Program',controls:'Effect Controls',effects:'Effects',bookmarks:'Bookmarks',timeline:'Timeline',tools:'Tools',meters:'Audio meters'};
   const clone=v=>JSON.parse(JSON.stringify(v)),uid=()=>globalThis.crypto.randomUUID(),clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
   const number=(v,fallback)=>Number.isFinite(Number(v))?Number(v):fallback;
   const tabs=(ids,active=ids[0])=>({kind:'tabs',id:uid(),panels:ids,active}),split=(axis,a,b,ratio=.5)=>({kind:'split',id:uid(),axis,ratio,a,b});
   function preset(name='editing'){
+    if(name==='filmcraft')return {tree:split('x',split('y',split('x',tabs(['source','controls'],'controls'),tabs(['program']),.43),split('x',tabs(['sources','bookmarks']),split('x',tabs(['tools']),split('x',tabs(['timeline']),tabs(['meters']),.9),.08),.28),.56),tabs(['effects']),.82),floats:[],closed:[],maximized:null};
     const project=tabs(['sources','source','bookmarks']),program=tabs(['program']),controls=tabs(['controls']),effects=tabs(['effects']),timeline=tabs(['timeline']);
     const editing=split('y',split('x',project,split('x',program,tabs(['controls','effects'],'controls'),.72),.23),timeline,.64);
     const other=split('y',split('x',controls,split('x',program,effects,.7),.25),split('x',project,timeline,.25),.64);
@@ -17,7 +18,7 @@
       if(n.kind!=='tabs')return null;const values=(Array.isArray(n.panels)?n.panels:[]).filter(p=>panels.includes(p)&&!seen.has(p)&&seen.add(p));if(!values.length)return null;return {kind:'tabs',id,panels:values,active:values.includes(n.active)?n.active:values[0]};
     }
     const tree=node(raw?.tree),floats=[];
-    for(const f of (Array.isArray(raw?.floats)?raw.floats:[]).slice(0,7)){const n=node(f.node);if(n)floats.push({id:typeof f.id==='string'&&f.id.length<=80&&!floats.some(other=>other.id===f.id)?f.id:uid(),node:n,x:clamp(number(f.x,40),0,4000),y:clamp(number(f.y,30),0,2400),w:clamp(number(f.w,360),180,2400),h:clamp(number(f.h,300),140,1800)});}
+    for(const f of (Array.isArray(raw?.floats)?raw.floats:[]).slice(0,panels.length)){const n=node(f.node);if(n)floats.push({id:typeof f.id==='string'&&f.id.length<=80&&!floats.some(other=>other.id===f.id)?f.id:uid(),node:n,x:clamp(number(f.x,40),0,4000),y:clamp(number(f.y,30),0,2400),w:clamp(number(f.w,360),180,2400),h:clamp(number(f.h,300),140,1800)});}
     if(!tree&&!floats.length)return preset();return {tree,floats,closed:panels.filter(p=>!seen.has(p)),maximized:null};
   }
   function walk(n,fn){if(!n)return;fn(n);if(n.kind==='split'){walk(n.a,fn);walk(n.b,fn);}}

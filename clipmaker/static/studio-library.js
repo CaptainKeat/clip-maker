@@ -3,7 +3,7 @@
   'use strict';
   const items=[
     {id:'speakers',group:'Audio analysis',name:'Split speakers',kind:'tool',target:'audio',keywords:'wespeaker scan splice diarization local'},
-    {id:'transcribe',group:'Audio analysis',name:'Transcribe clip',kind:'tool',target:'primary',keywords:'whisper speech subtitles local'},
+    {id:'transcribe',group:'Audio analysis',name:'Auto captions',kind:'tool',target:'primary',keywords:'whisper speech subtitles local transcribe'},
     {id:'volume',group:'Audio controls',name:'Volume & fades',kind:'controls',target:'audio',keywords:'gain fade mix'},
     {id:'duck',group:'Audio controls',name:'Duck under dialogue',kind:'controls',target:'sound',keywords:'music ducking ratio'},
     {id:'crossfade',group:'Audio controls',name:'Crossfade',kind:'controls',target:'sound',keywords:'transition blend next soundtrack'},

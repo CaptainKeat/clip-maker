@@ -44,11 +44,11 @@ def cancel(identity):
             if run.get('process') and run['process'].poll() is None:run['process'].terminate()
 
 
-def _run(identity,command,log,progress,label,cwd=None):
+def _run(identity,command,log,progress,label,cwd=None,env=None):
     with log.open('ab') as output:
         with LOCK:
             if RUNS[identity]['cancelled']:raise RuntimeError('Transcription cancelled; saved edit unchanged')
-            process=subprocess.Popen(command,stdout=output,stderr=output,cwd=cwd,creationflags=CREATE_NO_WINDOW)
+            process=subprocess.Popen(command,stdout=output,stderr=output,cwd=cwd,env=env,creationflags=CREATE_NO_WINDOW)
             RUNS[identity]['process']=process
         started=time.monotonic()
         try:
@@ -86,7 +86,7 @@ def transcribe(settings,project_id,clip_id,ordinal,identity,progress=None):
         command=whisper_setup.command(settings,wav,output)
         _run(identity,[settings.ffmpeg,'-hide_banner','-loglevel','error','-y','-ss',str(clip['start']),'-i',media['path'],'-t',str(clip['end']-clip['start']),
              '-map',f'0:a:{ordinal}','-vn','-ar','16000','-ac','1','-c:a','pcm_s16le',str(wav)],destination/'audio.log',progress,'Extracting selected audio track')
-        _run(identity,command,destination/'whisper.log',progress,'Whisper transcription',cwd=Path(command[0]).parent)
+        _run(identity,command,destination/'whisper.log',progress,'Whisper transcription',cwd=Path(command[0]).parent,env=whisper_setup.environment(settings))
         payload=json.loads(output.with_suffix('.json').read_text(encoding='utf-8'))
         from .transcribe import gate_words_by_audio
         words=gate_words_by_audio(transcript_words(payload),wav)

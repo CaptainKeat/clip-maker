@@ -1,0 +1,31 @@
+{
+  "reference_commit": "71438c627b5cbcfb550526c3971f4d0037733c5c",
+  "license": "OFL-1.1",
+  "files": [
+    {
+      "path": "assets/fonts/Inter-Regular.ttf",
+      "url": "https://raw.githubusercontent.com/storytold/filmcraft/71438c627b5cbcfb550526c3971f4d0037733c5c/assets/fonts/Inter-Regular.ttf",
+      "sha256": "40d692fce188e4471e2b3cba937be967878f631ad3ebbbdcd587687c7ebe0c82"
+    },
+    {
+      "path": "assets/fonts/Inter-SemiBold.ttf",
+      "url": "https://raw.githubusercontent.com/storytold/filmcraft/71438c627b5cbcfb550526c3971f4d0037733c5c/assets/fonts/Inter-SemiBold.ttf",
+      "sha256": "78a843fade9d4612a5567302fb595b56976eb5fcebf4fea5a5912d638bafcde3"
+    },
+    {
+      "path": "assets/fonts/JetBrainsMono-Regular.ttf",
+      "url": "https://raw.githubusercontent.com/storytold/filmcraft/71438c627b5cbcfb550526c3971f4d0037733c5c/assets/fonts/JetBrainsMono-Regular.ttf",
+      "sha256": "e6fd0d7e91550b3ed2b735d4312474362c4716edc4fc0577a0f61ed782d5aed1"
+    },
+    {
+      "path": "assets/fonts/OFL-Inter.txt",
+      "url": "https://raw.githubusercontent.com/storytold/filmcraft/71438c627b5cbcfb550526c3971f4d0037733c5c/assets/fonts/OFL-Inter.txt",
+      "sha256": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a"
+    },
+    {
+      "path": "assets/fonts/OFL-JetBrainsMono.txt",
+      "url": "https://raw.githubusercontent.com/storytold/filmcraft/71438c627b5cbcfb550526c3971f4d0037733c5c/assets/fonts/OFL-JetBrainsMono.txt",
+      "sha256": "a76abf002c49097d146e86740a3105a5d00450b1592e820a1109a8c5680cd697"
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+@font-face{font-family:Inter;src:url('/fonts/Inter-Regular.ttf');font-weight:400;font-display:swap}
+@font-face{font-family:Inter;src:url('/fonts/Inter-SemiBold.ttf');font-weight:600;font-display:swap}
+@font-face{font-family:'JetBrains Mono';src:url('/fonts/JetBrainsMono-Regular.ttf');font-display:swap}
+body[data-studio-page=editor]{font-family:Inter,'Segoe UI',sans-serif;background:#171717}
+body[data-studio-page=editor] .studio-shell{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
+body[data-studio-page=editor] .studio-sidebar{display:none}
+.studio-editor{--bg:#171717;--panel:#222;--line:#353535;--text:#dedede;--muted:#a3a3a3;--accent:#76aff8;grid-template-rows:auto auto minmax(0,1fr);font-size:12px;background:#171717}
+#studio-editor-menus{display:flex;align-items:center;gap:2px;padding:0 8px;height:31px;background:#242424;border-bottom:1px solid #111;flex:none;min-width:0;overflow:auto}
+.editor-app-name{font-weight:600;color:#b9b9b9;font-size:11px;margin-right:14px;white-space:nowrap}
+#studio-editor-menus button{font-size:11px;font-weight:400;padding:6px 9px;border:0;border-radius:0;background:transparent;color:#ccc;white-space:nowrap}
+#studio-editor-menus button:hover,#studio-editor-menus button[aria-expanded=true]{background:#3a3a3a}
+.workspace-tabs{margin-left:auto;display:flex;align-items:center;gap:8px}
+#studio-editor-menus .workspace-tabs button{padding:7px 5px;border-bottom:2px solid transparent}
+#studio-editor-menus .workspace-tabs button[aria-pressed=true]{color:#d7e8ff;border-bottom-color:#76aff8}
+.studio-command-menu{position:fixed;z-index:120;min-width:260px;max-height:75vh;overflow:auto;padding:5px;border:1px solid #535353;background:#292929;box-shadow:0 7px 25px #000b;color:#ddd}
+.studio-command-menu button{display:flex;justify-content:space-between;gap:25px;width:100%;padding:7px 10px;text-align:left;border:0;border-radius:0;background:transparent;color:#ddd;font-size:12px;font-weight:400}
+.studio-command-menu button:hover,.studio-command-menu button:focus-visible{background:#3c506b;outline:1px solid #91b7e8}
+.studio-command-menu kbd{font:10px Inter,sans-serif;color:#aaa}
+.studio-editor .project-bar{padding:5px 10px;gap:6px;border-color:#353535;background:#1e1e1e;min-height:36px;flex-wrap:nowrap;overflow:auto}
+.studio-editor .project-bar input{padding:4px 7px;font-size:11px;background:transparent;border-color:transparent;min-width:140px;max-width:240px;font-weight:600}
+.studio-editor .project-bar input:focus{border-color:#5c93d6;background:#181818}
+.studio-editor .project-bar button,.studio-editor .project-bar select{padding:5px 8px!important;font-size:10px;min-height:26px;border-radius:2px;background:#303030;border-color:#444;color:#d6d6d6}
+.studio-editor #studio-export{background:#294565;color:#dbeaff;border-color:#4c719a}
+.studio-editor button{border-radius:2px}.studio-editor input,.studio-editor select,.studio-editor textarea{border-radius:3px;background:#171717;border-color:#454545;padding:5px 7px;font-size:12px;color:#dedede}
+.studio-editor label{color:#aaa;font-size:11px}.studio-editor input[type=number]{color:#86b7f7;font-family:'JetBrains Mono',Consolas,monospace;font-size:11px}
+.studio-editor details{border-color:#393939}.studio-editor summary{font-size:12px;font-weight:600;padding:5px 0}.studio-editor .field-pair{gap:8px}.studio-editor .muted,.studio-editor .small{font-size:10px;color:#a3a3a3}
+.studio-editor .dock-root{background:#141414}.studio-editor .dock-stack{background:#222;border-color:#111}.studio-editor .dock-stack.dock-focused{border-color:#6b94c2}
+.studio-editor .dock-tabs{background:#222;min-height:29px;border-color:#151515;gap:6px}
+.studio-editor .dock-tab{background:transparent!important;border:0;font-size:12px;padding:6px 5px;color:#a8a8a8;font-weight:400}
+.studio-editor .dock-tab[aria-selected=true]{color:#ddd;border-bottom:1px solid #adadad}
+.studio-editor .dock-tab-menu{color:#aaa;border:0;background:transparent;padding:3px 5px!important}
+.studio-editor .dock-panel{background:#222;padding:8px}.studio-editor .dock-panel.program-panel{background:#1d1d1d;padding:8px}
+.studio-editor .dock-splitter{background:#101010}.studio-editor .dock-splitter:hover,.studio-editor .dock-splitter:focus-visible{background:#6389b5}
+.studio-editor .dock-panel#studio-effects-library{padding:8px}.studio-editor .effect-row{border:0;border-radius:0;background:transparent;color:#c9c9c9;padding:5px 6px;min-height:27px;font-size:11px;text-align:left}
+.studio-editor .effect-row:hover,.studio-editor .effect-row.selected{background:#35475c}.studio-editor .effect-row small{color:#888}.studio-editor .library-help{font-size:10px}.studio-editor .effect-category{border:0}.studio-editor .effect-category summary{font-weight:400;color:#d0d0d0}
+.studio-editor #studio-effect-search{border-radius:14px;padding:5px 10px}.studio-editor .effect-scope{padding:3px 0;margin:4px 0}.studio-editor #studio-effect-apply{padding:5px;font-size:10px}
+.studio-editor .program-panel>.panel-title{font-size:10px;color:#aaa;margin:0 0 4px}.studio-editor .program-panel .transport{margin:4px 0}.studio-editor .transport button{padding:4px 7px;border-color:#444;background:#303030;color:#ddd;font-size:11px}
+.studio-editor #studio-clock,.studio-editor #studio-source-clock{font-family:'JetBrains Mono',Consolas,monospace;color:#82b5f8}.studio-editor #studio-source-monitor{padding:8px}.studio-editor #studio-source-video{height:auto;max-height:220px}
+.studio-editor .control-source{background:#292929;border-color:#393939;padding:7px 9px;color:#bababa}.studio-editor .project-inspector h3{font-size:12px;margin:8px 0}.studio-editor .project-inspector button.secondary{font-size:11px;padding:5px 8px;background:#303030;border-color:#414141}
+.studio-editor .dock-panel.project-timeline{padding:0;background:#202020}.studio-editor .timeline-toolbar{padding:5px 8px;background:#252525;border-color:#363636;flex-wrap:nowrap;overflow-x:auto;min-height:34px;gap:5px}
+.studio-editor .edit-tools{padding:4px 8px;background:#232323;flex-wrap:nowrap;overflow-x:auto;min-height:33px;gap:6px}.studio-editor .selection-tools{gap:5px}.studio-editor .timeline-toolbar button,.studio-editor .edit-tools button{border-radius:2px;background:#333;color:#ccc;border-color:#444;white-space:nowrap;padding:4px 6px;font-size:10px}
+.studio-editor .timeline-toolbar label{flex:none}.studio-editor .timeline-toolbar input{width:80px}.studio-editor .edit-tools>*{flex:none}.studio-editor .check{white-space:nowrap}
+body:not(.handheld) .studio-editor .timeline-toolbar #studio-add-video-track,body:not(.handheld) .studio-editor .timeline-toolbar #studio-add-audio-track,body:not(.handheld) .studio-editor .timeline-toolbar #studio-add-caption-track,body:not(.handheld) .studio-editor .timeline-toolbar #studio-layout-reset,body:not(.handheld) .studio-editor .timeline-toolbar #studio-add-marker{display:none}
+.studio-editor #studio-ruler{background:#242424}.studio-editor .ruler-tick{font-family:'JetBrains Mono',Consolas,monospace;color:#aaa}.studio-editor .timeline-track{background:#1b1b1b;border-color:#373737}.studio-editor .track-label{background:#2b2b2b;color:#b5b5b5}.studio-editor .timeline-piece{border-radius:1px;font-family:Inter,sans-serif;font-size:10px}.studio-editor .timeline-piece.selected{border-color:#b0ccef;box-shadow:0 0 0 1px #98bfe9}.studio-editor #studio-playhead{background:#78aef5}
+.studio-editor .project-bin-tools{display:flex;gap:6px;align-items:center;margin-bottom:9px}.studio-editor .project-bin-tools input{font-size:10px;min-width:0}.studio-editor .project-bin-tools button{padding:4px 6px;font-size:12px;background:#333;color:#ccc;border-color:#444}
+.studio-editor .bin-list-view .bin-item{display:grid;grid-template-columns:34px minmax(0,1fr);gap:5px 8px;border:0;border-bottom:1px solid #393939;border-radius:0;padding:6px 0;margin:0;background:transparent}.studio-editor .bin-list-view .bin-item img{width:34px;height:25px;object-fit:cover;grid-row:1/3}.studio-editor .bin-list-view .bin-item strong{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:400;grid-column:2;margin:0}.studio-editor .bin-list-view .bin-item>div{grid-column:2}.studio-editor .bin-list-view .bin-item button{font-size:9px;padding:3px 5px;background:#2b2b2b;color:#aaa;border-color:#414141}
+.studio-editor #studio-toolbox{padding:8px 3px}.editor-tool-buttons{display:flex;flex-direction:column;gap:7px;align-items:center}.editor-tool-buttons button{width:30px;height:30px;padding:0;background:transparent;color:#ccc;border:1px solid transparent;font-size:17px}.editor-tool-buttons button:hover,.editor-tool-buttons button[aria-pressed=true]{background:#394e68;border-color:#7195bc;color:#fff}
+.dock-stack:has(#studio-toolbox) .dock-tab,.dock-stack:has(#studio-audio-meters) .dock-tab{font-size:10px;padding:5px 2px}.dock-stack:has(#studio-toolbox) .dock-tabs,.dock-stack:has(#studio-audio-meters) .dock-tabs{gap:0}
+#studio-audio-meters{position:relative;display:grid;grid-template-columns:22px minmax(0,1fr);grid-template-rows:minmax(60px,1fr) 20px;gap:4px;padding:12px 5px}.preview-meter-scale{display:flex;flex-direction:column;justify-content:space-between;font:8px 'JetBrains Mono',monospace;color:#aaa;padding:0 0 20px}.preview-meter-channels{display:flex;gap:6px}.preview-meter-channel{flex:1;display:flex;flex-direction:column;text-align:center;gap:5px;font-size:9px}.preview-meter{position:relative;flex:1;min-height:60px;background:#131313;border:1px solid #444;overflow:hidden}.preview-meter-fill{position:absolute;bottom:0;left:0;right:0;height:0;background:linear-gradient(to top,#58a85c,#c3b859 85%,#cb5b55)}#studio-audio-meters small{grid-column:1/3;font-size:8px;color:#888;white-space:nowrap}
+.speech-engine-summary{border-left:3px solid #76aff8;padding:8px 12px;background:#24313e;font-size:12px}#speech-advanced{padding:10px;border:1px solid #414141;margin-bottom:15px}#speech-advanced summary{cursor:pointer}
+body.handheld #studio-editor-menus{display:none}body.handheld .studio-editor{grid-template-rows:auto auto minmax(0,1fr)}body.handheld .studio-editor button{min-height:36px}body.handheld .studio-editor input,body.handheld .studio-editor select{min-height:36px;font-size:13px}body.handheld .studio-editor .project-bar{min-height:42px;padding:4px 8px}body.handheld .studio-editor .project-bar input{font-size:11px;min-height:32px}body.handheld .studio-editor .timeline-toolbar,body.handheld .studio-editor .edit-tools{min-height:39px}body.handheld .studio-editor .timeline-toolbar button,body.handheld .studio-editor .edit-tools button{min-height:32px}body.handheld .editor-tool-buttons{flex-direction:row;flex-wrap:wrap}body.handheld .editor-tool-buttons button{width:44px;height:44px}body.handheld .studio-editor .dock-panel.program-panel{padding:4px 8px}body.handheld .studio-editor .bin-item button,body.handheld .studio-editor .effect-row{min-height:40px;font-size:13px}body.handheld #studio-audio-meters{height:200px!important;min-height:150px}body.handheld .studio-command-menu button{min-height:42px}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #90b9ef;outline-offset:1px}
+body[data-studio-page=editor] #studio-message{position:fixed;bottom:0;left:0;right:0;z-index:80;padding:3px 10px;max-height:42px;overflow:auto;font-size:10px;background:#262c28;border-top:1px solid #454f49;pointer-events:none}
+body[data-studio-page=editor] #studio-message.error{background:#44292b;color:#f5c8c8;border-color:#945a60}
+body:not(.handheld) .studio-editor .timeline-toolbar::-webkit-scrollbar,body:not(.handheld) .studio-editor .edit-tools::-webkit-scrollbar{height:4px}
+body:not(.handheld) .studio-editor .timeline-toolbar::-webkit-scrollbar-thumb,body:not(.handheld) .studio-editor .edit-tools::-webkit-scrollbar-thumb{background:#555}
+body.handheld .studio-editor .transport button{min-height:30px}
+.preview-meter-fill{height:100%;clip-path:inset(100% 0 0 0)}
+body.handheld .studio-editor select[data-track-height]{width:48px!important;padding:2px!important;font-size:10px;min-height:30px}
+.studio-editor .control-source{margin-inline:0!important;top:0!important;margin-bottom:8px}
+.studio-editor .dock-stack:has(#studio-audio-meters)>.dock-tabs{overflow:hidden}
+.studio-editor .dock-stack:has(#studio-audio-meters) .dock-tab{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

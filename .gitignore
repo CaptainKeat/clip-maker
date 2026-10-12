@@ -13,6 +13,7 @@ provider-credentials.json
 settings.json
 studio-workspaces*.json
 /third_party/ffmpeg/bin/
+/third_party/whisper/runtime/
 *.db
 *.db-wal
 *.db-shm

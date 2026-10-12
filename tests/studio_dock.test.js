@@ -8,3 +8,5 @@ const corrupted=D.normalize({tree:{kind:'split',axis:'bad',ratio:999,a:{kind:'ta
 const same=D.dock(layout,'program',program.id,'left');assert.equal(JSON.stringify(same),before);
 assert.throws(()=>D.dock(layout,'program','missing','center'));assert.ok(D.normalize(JSON.parse(JSON.stringify(floating))).floats[0]);
 console.log('Dock/tab/split/float/close/reopen, immutability and corrupted-layout recovery passed.');
+const filmcraft=D.preset('filmcraft');assert.deepEqual(D.owner(filmcraft,'controls').panels,['source','controls']);assert.ok(D.owner(filmcraft,'tools'));assert.ok(D.owner(filmcraft,'meters'));assert.equal(D.owner(filmcraft,'effects').panels.length,1);assert.deepEqual(D.normalize(filmcraft),filmcraft);
+const old=D.normalize(layout);assert.ok(old.closed.includes('tools')&&old.closed.includes('meters'));assert.equal(D.owner(old,'program').id,program.id);

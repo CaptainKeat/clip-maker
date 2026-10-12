@@ -463,8 +463,10 @@ class ClipMakerHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         if parsed.path == "/":
             self._serve_file(STATIC_DIR / "studio.html")
-        elif parsed.path in {"/studio.js","/studio.css","/studio-connectors.js","/studio-editing.js","/studio-workspace.js","/studio-layout.js","/studio-groups.js","/studio-selection.js","/studio-dock-model.js","/studio-dock.js","/studio-library.js","/studio-effects.js","/studio-handheld.js","/studio-lanes.js"}:
+        elif parsed.path in {"/studio.js","/studio.css","/studio-filmcraft.css","/studio-connectors.js","/studio-editing.js","/studio-workspace.js","/studio-chrome.js","/studio-layout.js","/studio-groups.js","/studio-selection.js","/studio-dock-model.js","/studio-dock.js","/studio-library.js","/studio-effects.js","/studio-handheld.js","/studio-lanes.js"}:
             self._serve_file(STATIC_DIR / parsed.path[1:])
+        elif parsed.path in {'/fonts/Inter-Regular.ttf','/fonts/Inter-SemiBold.ttf','/fonts/JetBrainsMono-Regular.ttf'}:
+            self._serve_file(Path(getattr(__import__('sys'),'_MEIPASS',Path(__file__).resolve().parent.parent))/'assets'/'fonts'/Path(parsed.path).name)
         elif parsed.path == '/clipmaker.ico':
             self._serve_file(Path(getattr(__import__('sys'),'_MEIPASS',Path(__file__).resolve().parent.parent))/'assets'/'clipmaker.ico')
         elif parsed.path.startswith("/studio/"):

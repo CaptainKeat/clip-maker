@@ -12,7 +12,9 @@ $arguments=@('-m','PyInstaller','--noconfirm','--onedir','--windowed','--name','
     '--add-data','third_party/ffmpeg/LICENSE;third_party/ffmpeg','--add-data','third_party/ffmpeg/README.txt;third_party/ffmpeg',
     '--add-data','third_party/ffmpeg/manifest.json;third_party/ffmpeg','--add-binary','third_party/ffmpeg/bin/ffmpeg.exe;media-tools',
     '--add-binary','third_party/ffmpeg/bin/ffprobe.exe;media-tools',
-    '--add-data','THIRD_PARTY_NOTICES.md;.','--copy-metadata','numpy','--collect-all','sherpa_onnx','--add-data','third_party/speaker;third_party/speaker')
+    '--add-data','THIRD_PARTY_NOTICES.md;.','--copy-metadata','numpy','--collect-all','sherpa_onnx','--add-data','third_party/speaker;third_party/speaker',
+    '--add-data','third_party/whisper/runtime;whisper-tools','--add-data','third_party/whisper/LICENSE-whisper.cpp;third_party/whisper',
+    '--add-data','third_party/whisper/LICENSE-model;third_party/whisper')
 foreach($module in @('torch','transformers','onnx_asr','onnxruntime','scipy','matplotlib','pandas','IPython','tkinter','pytest','librosa','sklearn','soundfile','numba','llvmlite','jax','jaxlib')) {
     $arguments += @('--exclude-module',$module)
 }

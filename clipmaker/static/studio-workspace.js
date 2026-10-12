@@ -4,7 +4,7 @@
     const $=s=>document.querySelector(s), E=window.StudioEditing;
     const esc=ctx.esc, clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
     let source=null,sourceTime=0,sourceOffset=0,sourcePlaying=false,sourceToken=0;
-    const dock=window.StudioDock({...ctx,pauseSource:pause}),resize=()=>dock.resize();
+    const chrome=window.StudioChrome(ctx),dock=window.StudioDock({...ctx,pauseSource:pause,chrome}),resize=()=>dock.resize();chrome.bind(dock);
     function tab(bookmarks){if(bookmarks){pause();refresh();}dock.show(bookmarks?'bookmarks':'sources');}
     $('#studio-sources-tab').onclick=()=>tab(false);$('#studio-bookmarks-tab').onclick=()=>tab(true);$('#studio-effects-tab').onclick=()=>{pause();dock.show('effects');};
     function refresh(){
@@ -40,6 +40,7 @@
     $('#studio-source-mark-in').onclick=()=>{$('#studio-source-in').value=sourceTime.toFixed(3);};$('#studio-source-mark-out').onclick=()=>{$('#studio-source-out').value=sourceTime.toFixed(3);};
     $('#studio-source-insert').onclick=()=>{if(!source)return;const start=Number($('#studio-source-in').value),end=Number($('#studio-source-out').value);if(!Number.isFinite(start)||!Number.isFinite(end)||start<0||end>source.metadata.duration_sec+.001||end-start<.04)return ctx.message('Choose a source range of at least one frame.',true);try{ctx.insert(source,start,end,Number($('#studio-source-track').value));pause();}catch(e){ctx.message(e.message,true);}};
     function decorate(){
+      chrome.filterBin();
       const r=ctx.recipe();if(!r)return;
       for(const [selector,key]of [['#studio-video-track','video'],['#studio-caption-track','captions'],['#studio-source-audio-track','audio'],['#studio-marker-track','bookmarks']])decorateRow($(selector),key);
       document.querySelectorAll('.sound-lane,.video-lane,.caption-lane').forEach(row=>decorateRow(row,row.dataset.trackKey));refresh();

@@ -6,7 +6,7 @@ import threading
 from contextlib import closing
 from pathlib import Path
 
-PANELS={'sources','source','program','controls','effects','bookmarks','timeline'}
+PANELS={'sources','source','program','controls','effects','bookmarks','timeline','tools','meters'}
 LOCK=threading.Lock()
 
 def validate(raw):
@@ -37,7 +37,7 @@ def validate(raw):
                 seen.add(panel)
             active=value.get('active');return {'kind':'tabs','id':identity,'panels':values,'active':active if active in values else values[0]}
         tree=node(value.get('tree'));floats=value.get('floats',[])
-        if not isinstance(floats,list) or len(floats)>7:raise ValueError('Invalid floating panels')
+        if not isinstance(floats,list) or len(floats)>len(PANELS):raise ValueError('Invalid floating panels')
         windows=[]
         for f in floats:
             if not isinstance(f,dict):raise ValueError('Invalid floating panel')
@@ -48,7 +48,7 @@ def validate(raw):
         return {'tree':tree,'floats':windows,'closed':sorted(PANELS-seen),'maximized':None}
     for field in ('saved','working'):
         values=raw.get(field)
-        if not isinstance(values,dict) or len(values)>20:raise ValueError('Keep up to 20 workspaces')
+        if not isinstance(values,dict) or len(values)>25:raise ValueError('Keep up to 25 workspaces')
         for name,value in values.items():
             if not isinstance(name,str) or not name.strip() or len(name)>60 or name in {'__proto__','constructor','prototype'}:raise ValueError('Invalid workspace name')
             result[field][name]=layout(value)

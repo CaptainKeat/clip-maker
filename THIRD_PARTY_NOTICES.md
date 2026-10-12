@@ -42,3 +42,11 @@ Clip Maker's MIT license covers its own source. Separately distributed dependenc
 ## Offline speaker scanning
 
 WeSpeaker VoxCeleb ResNet34 (CC BY 4.0, WeSpeaker/VoxCeleb attribution), pyannote segmentation 3.0 (MIT, CNRS 2022), sherpa-onnx 1.13.8 (Apache 2.0) and its ONNX Runtime (MIT). Bundled model origins, checksums and licenses are in `third_party/speaker`.
+
+## Offline automatic captions
+
+The Windows package includes whisper.cpp v1.9.2 and its ggml CPU backends (MIT), and OpenAI Whisper base converted/quantized as ggml-base-q5_1 (MIT, OpenAI 2022). Pinned archive/model origins and SHA-256 checksums are in `third_party/whisper/manifest.json`; licenses are `LICENSE-whisper.cpp` and `LICENSE-model`. The default model is multilingual and runs locally on CPU. The package reuses the Microsoft runtime already shipped with Qt/Python for the child executable.
+
+## Interface fonts and reference
+
+Inter (Rasmus Andersson) and JetBrains Mono (JetBrains) are reused unmodified under OFL-1.1. License texts are in `assets/fonts/OFL-Inter.txt` and `assets/fonts/OFL-JetBrainsMono.txt`; pinned origins and checksums are in `third_party/fonts/manifest.json`. These font files came from FilmCraft's public repository at commit 71438c627b5cbcfb550526c3971f4d0037733c5c. The Clip Maker UI is independently implemented from public panel/layout/theme observations. See `docs/filmcraft-ui-audit.md`; no reference footage or native rendering code is distributed.
