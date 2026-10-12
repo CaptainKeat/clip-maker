@@ -13,7 +13,7 @@
       sizes.inspector=clamp(Number(sizes.inspector)||260,180,Math.max(180,width-sizes.bin-180));
       editor.style.setProperty('--timeline-size',sizes.timeline+'px');editor.style.setProperty('--bin-size',sizes.bin+'px');editor.style.setProperty('--inspector-size',sizes.inspector+'px');
       for(const [id,key]of [['studio-timeline-resize','timeline'],['studio-bin-resize','bin'],['studio-inspector-resize','inspector']]){const h=$('#'+id);h.setAttribute('aria-valuenow',Math.round(sizes[key]));h.setAttribute('aria-valuemin',key==='timeline'?180:150);h.setAttribute('aria-valuemax',Math.max(1000,Math.round(sizes[key])));}
-      const overview=$('.audio-overview');if(overview)overview.style.width=Math.max(1,$('#studio-timeline-scroll').clientWidth)+'px';ctx.layout();
+      const audioTools=$('.audio-track-tools');if(audioTools)audioTools.style.width=Math.max(1,$('#studio-timeline-scroll').clientWidth)+'px';ctx.layout();
     }
     function remember(){localStorage.setItem('clipmaker-layout-v2',JSON.stringify(sizes));}
     for(const [id,key,axis,direction]of [['studio-timeline-resize','timeline','y',-1],['studio-bin-resize','bin','x',1],['studio-inspector-resize','inspector','x',-1]]){
