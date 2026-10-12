@@ -463,7 +463,7 @@ class ClipMakerHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         if parsed.path == "/":
             self._serve_file(STATIC_DIR / "studio.html")
-        elif parsed.path in {"/studio.js","/studio.css"}:
+        elif parsed.path in {"/studio.js","/studio.css","/studio-connectors.js"}:
             self._serve_file(STATIC_DIR / parsed.path[1:])
         elif parsed.path.startswith("/studio/"):
             try:

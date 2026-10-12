@@ -9,6 +9,8 @@ __pycache__/
 /vendor/
 /verification/
 /clipmaker.json
+provider-credentials.json
+settings.json
 /third_party/ffmpeg/bin/
 *.db
 *.db-wal

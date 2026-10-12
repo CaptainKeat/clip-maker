@@ -57,10 +57,16 @@ def _controller_request(
 
 
 def lmstudio_state(settings: Settings) -> dict:
+    if settings.llm_active_profile:
+        from .llm import selected
+        profile=selected(settings)
+        return {"ok":True,"mode":"profile","profile":{k:profile[k] for k in ["name","location","kind","model"]}}
     return _controller_request(settings, "/state")
 
 
 def set_lmstudio_mode(settings: Settings, mode: str) -> dict:
+    if settings.llm_active_profile:
+        raise ValueError("Manage this connection in Settings > AI tools. Load local models in their provider app.")
     if mode not in {"ai", "gaming"}:
         raise ValueError("Mode must be ai or gaming")
     timeout = 230.0 if mode == "ai" else 90.0
@@ -82,6 +88,9 @@ def lmstudio_chat(
     max_tokens: int = 180,
     timeout: float = 300.0,
 ) -> str:
+    if settings.llm_active_profile:
+        from .llm import chat
+        return chat(settings,prompt,temperature=temperature,max_tokens=max_tokens,timeout=timeout)
     state = lmstudio_state(settings)
     if not state.get("server_up") or not state.get("model_loaded"):
         raise RuntimeError(

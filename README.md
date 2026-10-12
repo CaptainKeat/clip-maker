@@ -4,7 +4,7 @@ A Windows video editor for clips, VODs and longer videos. Manual editing works w
 
 ## Install
 
-Download `Clip-Maker-v1.0.1-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
+Download `Clip-Maker-v1.0.2-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Clip-Maker.ps1
@@ -31,6 +31,18 @@ Projects autosave. Undo/redo is available during the editing session. Concurrent
 Keyboard shortcuts: Space play/pause, Ctrl+S save, Ctrl+Z undo, Ctrl+Shift+Z redo, Ctrl+K split, Delete remove, M bookmark.
 
 Full source durations are retained. There is no short-clip duration cap. The first release has one sequential video lane with additional overlay, caption, sound and bookmark lanes.
+
+## Models and speech
+
+Settings > AI tools stores named Local, Remote, and API connection profiles. Providers include LM Studio, Ollama, OpenAI, OpenRouter, Anthropic, Google Gemini and OpenAI-compatible servers. Save a profile, choose **Use this connection**, and enable LLM tools before generation. Server/model discovery is an explicit metadata request; a model listing does not prove it is loaded or can generate. **Test a short response** sends a small synthetic prompt. Local models are loaded in their provider application; Clip Maker does not automatically change loaded models.
+
+Remote connections can use HTTPS or explicitly allowed HTTP. Hosted API connections require HTTPS. API keys are encrypted for the current Windows account with DPAPI, live separately from settings, and are never returned to the browser. Changing a profile endpoint clears its previous key. Local keeps transcript text on the PC; remote/API generation sends transcript text to that server and hosted APIs may charge. Video files are not uploaded by this connector. Existing LM Studio/controller settings continue to work until a profile is explicitly activated.
+
+Settings > Speech checks an installed whisper.cpp executable and downloaded model, finds nearby model files, and selects language (including auto), automatic GPU/CPU or CPU-only, threads, quality, vocabulary hints and English translation. Automatic device selection depends on the installed Whisper build. English-only `.en.bin` models require English; use multilingual models for other languages. The app does not download models automatically.
+
+In the editor, select a video piece and **Transcribe clip**, select an audio track, and start local Whisper. The original trim range is extracted to a private local WAV; cues account for playback speed. Correct the draft before **Add captions to edit**. Existing captions are preserved, and changed source trims or speeds require a fresh transcription. No LLM is needed. Transcription can be cancelled; files, diagnostics and previous completed transcripts are retained. **Review transcript** reopens the last completed draft. Finish or cancel a running transcription before closing the installed app.
+
+Provider protocols follow the official [Ollama compatibility API](https://docs.ollama.com/api/openai-compatibility), [OpenAI Chat API](https://developers.openai.com/api/reference/resources/chat), [Anthropic Messages API](https://platform.claude.com/docs/en/api/messages/create) and [Gemini compatibility API](https://ai.google.dev/gemini-api/docs/openai). Whisper options follow the [whisper.cpp CLI](https://github.com/ggml-org/whisper.cpp/blob/master/examples/cli/README.md).
 
 ## Motion captions
 

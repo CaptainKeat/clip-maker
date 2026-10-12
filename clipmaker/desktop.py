@@ -47,6 +47,7 @@ def main():
 
     class Bridge(QObject):
         filesSelected = Signal(str)
+        whisperSelected = Signal(str,str)
         shutdownRequested = Signal()
         saveAcknowledged = Signal(bool,str)
         @Slot(bool,str)
@@ -57,6 +58,12 @@ def main():
             paths,_ = QFileDialog.getOpenFileNames(window,"Import media",str(Path(settings.source_root)),
                 "Media (*.mp4 *.mkv *.mov *.avi *.webm *.m4v *.ts *.flv *.wav *.mp3 *.m4a *.ogg *.flac *.aac *.png *.jpg *.jpeg *.webp *.bmp)")
             if paths: self.filesSelected.emit(json.dumps(paths))
+        @Slot(str)
+        def pickWhisper(self,kind):
+            if kind not in {"cli","model"}: return
+            path,_=QFileDialog.getOpenFileName(window,"Choose Whisper "+kind,str(Path(settings.whisper_model).parent),
+                "Whisper model (*.bin)" if kind=="model" else "Whisper executable (*.exe)")
+            if path: self.whisperSelected.emit(kind,path)
         @Slot()
         def openAiWorkspace(self):
             QDesktopServices.openUrl(QUrl(url+"/ai"))

@@ -82,6 +82,12 @@ function renderActivity() {
 
 function renderLmStudioState() {
   const control = $("#lmstudio-control");
+  if(lmStudioState?.mode==="profile"){
+    control.dataset.state="ai";
+    $("#lmstudio-status").textContent="Connection · "+lmStudioState.profile.name;
+    $("#lmstudio-detail").textContent=lmStudioState.profile.model+" · "+lmStudioState.profile.location+". Check or change it in Settings > AI tools.";
+    $("#lmstudio-load").disabled=true;$("#lmstudio-gaming").disabled=true;return;
+  }
   const loaded = Boolean(lmStudioState?.model_loaded);
   const serverUp = Boolean(lmStudioState?.server_up);
   const fullyGaming = !serverUp && Array.isArray(lmStudioState?.loaded_models) && lmStudioState.loaded_models.length === 0;

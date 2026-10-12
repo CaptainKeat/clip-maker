@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 
@@ -23,6 +23,13 @@ class Settings:
         str(Path.home() / ".claude-video-vision" / "models" / "ggml-large-v3.bin")
     )
     language: str = "en"
+    whisper_threads: int = 4
+    whisper_device: str = "auto"
+    whisper_quality: str = "balanced"
+    whisper_prompt: str = ""
+    whisper_translate: bool = False
+    llm_profiles: list[dict] = field(default_factory=list)
+    llm_active_profile: str = ""
     transcription_engine: str = "whisper"
     parakeet_model: str = "nemo-parakeet-tdt-0.6b-v3"
     parakeet_model_dir: str = str(PROJECT_ROOT / "data" / "models" / "parakeet-v3")

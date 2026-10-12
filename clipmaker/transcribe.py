@@ -276,29 +276,11 @@ def _transcribe_whisper(
     output_base: Path,
     progress: Callable[[str], None] | None = None,
 ) -> tuple[dict, str]:
-    cli = Path(settings.whisper_cli)
-    model = Path(settings.whisper_model)
-    if not cli.exists():
-        raise FileNotFoundError(f"whisper.cpp CLI not found: {cli}")
-    if not model.exists():
-        raise FileNotFoundError(f"Whisper model not found: {model}")
+    from .whisper_setup import command as whisper_command, executable
+    cli = executable(settings)
     output_json = output_base.with_suffix(".json")
-    if progress:
-        progress("falling back to whisper.cpp")
-    command = [
-        str(cli),
-        "-m",
-        str(model),
-        "-f",
-        str(wav_path),
-        "-l",
-        settings.language,
-        "-oj",
-        "-ojf",
-        "-of",
-        str(output_base),
-        "-np",
-    ]
+    if progress: progress("Transcribing with whisper.cpp")
+    command = whisper_command(settings,wav_path,output_base)
     subprocess.run(command, check=True, cwd=cli.parent, creationflags=CREATE_NO_WINDOW)
     payload = json.loads(output_json.read_text(encoding="utf-8"))
     payload["engine"] = "whisper"
