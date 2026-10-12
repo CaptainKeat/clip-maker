@@ -4,7 +4,7 @@ A Windows video editor for clips, VODs and longer videos. Manual editing works w
 
 ## Install
 
-Download `Clip-Maker-v1.0.2-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
+Download `Clip-Maker-v1.0.3-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Clip-Maker.ps1
