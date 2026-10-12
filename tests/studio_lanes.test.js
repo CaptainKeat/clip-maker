@@ -1,0 +1,17 @@
+const assert=require('node:assert/strict'),E=require('../clipmaker/static/studio-editing.js'),T=require('../clipmaker/static/studio-lanes.js');
+const r={clips:[{id:'base',start:0,end:20,speed:1,audio:[]}],captions:[],overlays:[{id:'v',time:2,duration:5,source_start:3,lane:'camera',link_id:'pair',asset_id:1}],sounds:[{id:'a',time:2,duration:5,source_start:3,lane:'voice',link_id:'pair',asset_id:1},{id:'solo',time:8,duration:2,lane:'music',asset_id:2}],markers:[],editing:{lanes:[],tracks:{}}};
+const original=JSON.stringify(r),selection={type:'overlays',index:0};
+assert.ok(T.selected(r,selection,'sounds',0));assert.equal(T.selected(r,selection,'sounds',1),false);assert.equal(T.selected(r,{...selection,single:true},'sounds',0),false);
+const moved=T.update(r,selection,'time',4);assert.equal(moved.sounds[0].time,4);assert.equal(moved.sounds[1].time,8);assert.equal(JSON.stringify(r),original);
+const trim=T.update(r,selection,'duration',3);assert.equal(trim.sounds[0].duration,3);
+const split=T.split(r,selection,4);assert.equal(split.overlays.length,2);assert.equal(split.sounds.length,3);assert.equal(split.overlays[1].link_id,split.sounds[1].link_id);assert.notEqual(split.overlays[0].link_id,split.overlays[1].link_id);assert.equal(split.sounds[1].source_start,5);
+const pasted=T.paste(r,T.copy(r,selection),10,true);assert.equal(pasted.recipe.overlays.at(-1).time,10);assert.equal(pasted.recipe.sounds.at(-1).time,10);assert.equal(pasted.recipe.overlays.at(-1).link_id,pasted.recipe.sounds.at(-1).link_id);assert.notEqual(pasted.recipe.overlays.at(-1).link_id,'pair');
+const removed=T.remove(r,selection);assert.equal(removed.overlays.length,0);assert.equal(removed.sounds.length,1);
+const unlinked=T.unlink(r,selection);assert.equal(T.selected(unlinked,selection,'sounds',0),false);assert.equal(T.remove(unlinked,selection).sounds.length,2);
+const locked=E.clone(r);locked.editing.tracks['sound:voice']={locked:true};assert.throws(()=>T.update(locked,selection,'time',4),/Unlock/);
+const added=T.add(r,'video');assert.ok(T.rows(added.recipe,'video').some(t=>t.id===added.track.id));assert.equal(added.recipe.overlays.length,1);
+const cut=E.cutRange(r,3,4,true);assert.equal(cut.overlays.length,2);assert.equal(cut.overlays[0].link_id,cut.sounds[0].link_id);assert.equal(cut.overlays[1].link_id,cut.sounds[1].link_id);assert.notEqual(cut.overlays[0].link_id,cut.overlays[1].link_id);
+const copied=E.paste(r,E.copySelection(r,'clips',0),0,true);assert.equal(copied.recipe.overlays[1].link_id,copied.recipe.sounds.find(s=>s.id!==r.sounds[0].id&&s.asset_id===1).link_id);assert.notEqual(copied.recipe.overlays[1].link_id,'pair');
+const crowded=E.clone(r);crowded.sounds=Array.from({length:100},(_,i)=>({...r.sounds[1],id:'s'+i}));assert.throws(()=>T.paste(crowded,T.copy(r,selection),10,true),/100-layer/);
+assert.throws(()=>E.crossfade(r,0,.5),/Unlink/);
+console.log('Empty track identity, paired selection, move/trim/split/copy/delete, unlink and linked-track locks passed.');

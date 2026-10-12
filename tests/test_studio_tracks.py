@@ -3,6 +3,18 @@ from clipmaker.studio_tracks import export_view, audible
 
 
 class TrackPlaybackTests(unittest.TestCase):
+    def test_named_video_order_and_visibility_match_track_controls(self):
+        recipe=self.recipe();recipe['overlays']=[{'asset_id':3,'lane':'upper'},{'asset_id':2,'lane':'lower'}]
+        recipe['editing']['lanes']=[{'id':'lower','kind':'video','name':'Lower'},{'id':'upper','kind':'video','name':'Upper'},{'id':'empty','kind':'audio','name':'Empty'}]
+        self.assertEqual([c['asset_id'] for c in export_view(recipe)['overlays']],[2,3])
+        recipe['editing']['tracks']['video:upper']={'hidden':True}
+        self.assertEqual([c['asset_id'] for c in export_view(recipe)['overlays']],[2])
+        recipe['editing']['tracks']['sound:empty']={'solo':True}
+        self.assertEqual(export_view(recipe)['sounds'],[])
+        recipe['captions']=[{'text':'Primary'},{'text':'Extra','lane':'titles'}]
+        recipe['editing']['tracks']['caption:titles']={'hidden':True}
+        self.assertEqual(export_view(recipe)['captions'],[{'text':'Primary'}])
+
     def recipe(self):
         return {'clips':[{'audio':[{'enabled':True}]}], 'captions':[{'text':'Hello'}],
                 'overlays':[{'asset_id':2}], 'sounds':[{'lane':'Voice'}, {'lane':'Music'}],

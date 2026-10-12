@@ -59,6 +59,16 @@ class StudioTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"finite"):
             studio.number(float("nan"))
 
+    def test_empty_tracks_and_linked_clip_lanes_roundtrip(self):
+        p=studio.create_project(self.settings,{'asset_id':self.asset['id']})
+        p['recipe']['editing']['lanes']=[{'id':'v2','name':'Camera','kind':'video'},{'id':'a2','name':'Voice','kind':'audio'},{'id':'empty','name':'Titles','kind':'caption'}]
+        p['recipe']['overlays']=[{'asset_id':self.asset['id'],'time':2,'duration':3,'lane':'v2','link_id':'pair'}]
+        p['recipe']['sounds']=[{'asset_id':self.asset['id'],'time':2,'duration':3,'lane':'a2','link_id':'pair'}]
+        saved=studio.save_project(self.settings,p['id'],p)['recipe']
+        self.assertEqual(saved['editing']['lanes'],p['recipe']['editing']['lanes'])
+        self.assertEqual(saved['overlays'][0]['link_id'],saved['sounds'][0]['link_id'])
+        self.assertEqual(saved['overlays'][0]['lane'],'v2')
+
     def test_export_progress_tolerates_unavailable_timestamp_and_reaps_process(self):
         process=Mock();process.stdout=MagicMock();process.stdout.__iter__.return_value=iter(['out_time_us=N/A\n','out_time_us=1000000\n'])
         process.returncode=0;process.poll.return_value=0

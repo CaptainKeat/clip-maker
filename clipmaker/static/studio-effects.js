@@ -27,6 +27,7 @@
     if(!tracks.length)throw new Error('No speaker regions are available. Choose aligned tracks or scan again.');
     if(existing.length+tracks.length>100)throw new Error('This edit would exceed 100 audio pieces. Choose aligned tracks instead.');
     r.sounds=[...existing,...tracks];
+    if(context.type==='sounds'&&item.link_id)for(const video of r.overlays||[])if(video.link_id===item.link_id)delete video.link_id;
     if(context.type==='clips'&&mix)mix.enabled=false;
     return {recipe:r,index:existing.length,time:cursor,count:tracks.length};
   }

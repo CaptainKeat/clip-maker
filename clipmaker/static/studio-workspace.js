@@ -14,7 +14,7 @@
       sizes.inspector=clamp(Number(sizes.inspector)||260,180,Math.max(180,width-sizes.bin-180));
       editor.style.setProperty('--timeline-size',sizes.timeline+'px');editor.style.setProperty('--bin-size',sizes.bin+'px');editor.style.setProperty('--inspector-size',sizes.inspector+'px');
       for(const [id,key]of [['studio-timeline-resize','timeline'],['studio-bin-resize','bin'],['studio-inspector-resize','inspector']]){const h=$('#'+id);h.setAttribute('aria-valuenow',Math.round(sizes[key]));h.setAttribute('aria-valuemin',key==='timeline'?180:150);h.setAttribute('aria-valuemax',Math.max(1000,Math.round(sizes[key])));}
-      const audioTools=$('.audio-track-tools');if(audioTools)audioTools.style.width=Math.max(1,$('#studio-timeline-scroll').clientWidth)+'px';ctx.layout();
+      ctx.layout();
     }
     function remember(){localStorage.setItem('clipmaker-layout-v2',JSON.stringify(sizes));}
     for(const [id,key,axis,direction]of [['studio-timeline-resize','timeline','y',-1],['studio-bin-resize','bin','x',1],['studio-inspector-resize','inspector','x',-1]]){
@@ -62,14 +62,14 @@
     $('#studio-source-insert').onclick=()=>{if(!source)return;const start=Number($('#studio-source-in').value),end=Number($('#studio-source-out').value);if(!Number.isFinite(start)||!Number.isFinite(end)||start<0||end>source.metadata.duration_sec+.001||end-start<.04)return ctx.message('Choose a source range of at least one frame.',true);try{ctx.insert(source,start,end,Number($('#studio-source-track').value));pause();}catch(e){ctx.message(e.message,true);}};
     function decorate(){
       const r=ctx.recipe();if(!r)return;
-      for(const [selector,key]of [['#studio-video-track','video'],['#studio-caption-track','captions'],['#studio-overlay-track','overlays'],['#studio-source-audio-track','audio'],['#studio-marker-track','bookmarks']])decorateRow($(selector),key);
-      document.querySelectorAll('.sound-lane').forEach(row=>decorateRow(row,row.dataset.trackKey));refresh();
+      for(const [selector,key]of [['#studio-video-track','video'],['#studio-caption-track','captions'],['#studio-source-audio-track','audio'],['#studio-marker-track','bookmarks']])decorateRow($(selector),key);
+      document.querySelectorAll('.sound-lane,.video-lane,.caption-lane').forEach(row=>decorateRow(row,row.dataset.trackKey));refresh();
     }
     function decorateRow(row,key){
       if(!row||!key)return;const state=E.track(ctx.recipe(),key),audio=key==='audio'||key.startsWith('sound:');row.style.height=(state.height||52)+'px';row.dataset.trackKey=key;row.classList.toggle('track-locked',!!state.locked);row.classList.toggle('track-disabled',audio?!E.audible(ctx.recipe(),key):!!state.hidden);
-      if(row.hidden)return;const controls=document.createElement('span');controls.className='track-controls';
-      const button=(flag,label,title)=>'<button data-track-key="'+esc(key)+'" data-track-flag="'+flag+'" aria-label="'+esc(title+' '+key)+'" aria-pressed="'+!!state[flag]+'" title="'+esc(title)+'">'+label+'</button>';
-      controls.innerHTML=(audio?button('muted','M','Mute')+button('solo','S','Solo'):key!=='bookmarks'?button('hidden','V','Hide output'):'')+button('locked','L','Lock')+'<select aria-label="'+esc('Height '+key)+'" data-track-height="'+esc(key)+'">'+[38,52,80,120,180].map(n=>'<option value="'+n+'"'+((state.height||52)===n?' selected':'')+'>'+n+'</option>').join('')+'</select>';
+      if(row.hidden)return;const trackName=(ctx.recipe().editing?.lanes||[]).find(t=>key.endsWith(':'+t.id))?.name||key;const controls=document.createElement('span');controls.className='track-controls';
+      const button=(flag,label,title)=>'<button data-track-key="'+esc(key)+'" data-track-flag="'+flag+'" aria-label="'+esc(title+' '+trackName)+'" aria-pressed="'+!!state[flag]+'" title="'+esc(title)+'">'+label+'</button>';
+      controls.innerHTML=(audio?button('muted','M','Mute')+button('solo','S','Solo'):key!=='bookmarks'?button('hidden','V','Hide output'):'')+button('locked','L','Lock')+'<select aria-label="'+esc('Height '+trackName)+'" data-track-height="'+esc(key)+'">'+[38,52,80,120,180].map(n=>'<option value="'+n+'"'+((state.height||52)===n?' selected':'')+'>'+n+'</option>').join('')+'</select>';
       row.querySelector('.track-label')?.append(controls);row.querySelectorAll('.timeline-piece').forEach(piece=>{piece.style.height=((state.height||52)-8)+'px';});
     }
     $('#studio-timeline').addEventListener('click',e=>{const b=e.target.closest('[data-track-flag]');if(!b)return;e.stopPropagation();ctx.trackChange(b.dataset.trackKey,b.dataset.trackFlag);},true);

@@ -4,7 +4,7 @@ A Windows video editor for clips, VODs and longer videos. Manual editing works w
 
 ## Install
 
-Download `Clip-Maker-v1.4.1-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
+Download `Clip-Maker-v1.5.0-Windows.zip` and `Install-Clip-Maker.ps1` from [Releases](https://github.com/CaptainKeat/clip-maker/releases). Put them in the same folder, then run:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Clip-Maker.ps1
@@ -34,7 +34,7 @@ Full source durations are retained. There is no short-clip duration cap. The fir
 
 ## Manual editing tools
 
-Select a video piece and choose its audio track, then **Build waveform**. Peaks are cached locally and can be cancelled; use the linked source-audio clips to scrub. Compatible preview windows are cached in memory (up to twelve) and on disk; still-frame previews respond while a new desktop window is prepared. Only visible timeline pieces are drawn at high zoom for long VODs. Drag the red playhead line or triangle, click and drag the ruler, empty lanes or video pieces to scrub. Playback pauses while scrubbing. Hold near a timeline edge to scroll further. Focus the playhead and use Left/Right for frame steps, Shift+Left/Right for one-second steps, or Home/End for the beginning/end.
+Select an audio piece to inspect its waveform. Waveforms build automatically; **Retry waveform** retries a failed build. Peaks are cached locally and can be cancelled; use the linked source-audio clips to scrub. Compatible preview windows are cached in memory (up to twelve) and on disk; still-frame previews respond while a new desktop window is prepared. Only visible timeline pieces are drawn at high zoom for long VODs. Drag the red playhead line or triangle, click and drag the ruler, empty lanes or video pieces to scrub. Playback pauses while scrubbing. Hold near a timeline edge to scroll further. Focus the playhead and use Left/Right for frame steps, Shift+Left/Right for one-second steps, or Home/End for the beginning/end.
 
 **Ripple layers** makes clip trims and removals move captions, overlays, soundtracks and bookmarks with the footage. Mark **I** and **O**, then **Ripple cut range** to remove a section. Copy a clip with its attached layers and paste it at the playhead; paste splits the destination clip. Copy/paste also works on individual captions and layers. Undo restores each edit. **Snap** aligns timeline drags with nearby edges, bookmarks and the playhead; hold Shift to bypass snapping. The video lane remains continuous when Ripple layers is off.
 
@@ -96,7 +96,7 @@ To build, install PyInstaller 6.22.2. Install requirements into `vendor` if isol
 
 ### Waveforms, saving and speaker tracks
 
-Clips automatically build a local source waveform in an aligned row below their video. Additional audio and speaker tracks get waveforms too. The selected source-track menu controls the clip waveform. Cached peaks are reused across edits.
+Clips automatically build a local source waveform in an aligned row below their video. Additional audio and speaker tracks get waveforms too. The audio Inspector shows a **Waveform stream** menu only when the source has multiple embedded audio streams. This display choice is per clip and does not change playback. Cached peaks are reused across edits.
 
 The desktop close prompt offers Save project, Exit without saving and Cancel for pending changes or unnamed projects. Save project is also available in the editor toolbar. Earlier autosaves remain available when exiting without saving.
 
@@ -116,7 +116,7 @@ Effects shows cues for existing fades, freeze endings and caption animation/moti
 
 Drag the horizontal divider above the timeline upward to make the timeline taller. Drag the dividers beside the Sources panel and Inspector to resize their widths. Focus a divider and use arrow keys for keyboard resizing. Panel sizes stay local to this app/browser; Reset layout restores the defaults. The installed Windows window can also be resized and maximized.
 
-Track headers offer Mute (M) and Solo (S) for linked source audio and each sound/speaker lane, output visibility (V) for video, overlays and captions, Lock (L), and a height menu. Visibility and audio controls affect preview and exports. Hidden main video produces black while keeping its audio; hiding overlays/captions removes only those visuals. Lock protects content from edits, including ripple changes; linked source audio cannot be moved by a trim while locked. Collapsing a group remains a viewing preference. Track controls and heights save with the project and support Undo/Redo. Audio clips now show filled amplitude bars mirrored around their centerline, matching a conventional editor waveform. Both linked source audio and sound/speaker lanes use this view. The separate overview strip is removed; the source-track selector and waveform controls stay inside Audio sources.
+Track headers offer Mute (M) and Solo (S) for linked source audio and each sound/speaker lane, output visibility (V) for video, overlays and captions, Lock (L), and a height menu. Visibility and audio controls affect preview and exports. Hidden main video produces black while keeping its audio; hiding overlays/captions removes only those visuals. Lock protects content from edits, including ripple changes; linked source audio cannot be moved by a trim while locked. Collapsing a group remains a viewing preference. Track controls and heights save with the project and support Undo/Redo. Audio clips now show filled amplitude bars mirrored around their centerline, matching a conventional editor waveform. Both linked source audio and sound/speaker lanes use this view. The separate overview strip is removed; waveform controls live in the selected audio clip Inspector; the stream selector appears only for sources with multiple embedded audio streams.
 
 Choose Preview on a video or audio in Sources to open the separate source monitor. Choose its audio stream, scrub or play it, set source In/Out numerically or with I/O buttons, and Insert range at the timeline playhead. Inserting video splits the destination clip and follows Ripple layers; audio ranges become sound layers. Source playback pauses timeline playback. Source points are independent of the timeline range marks.
 
@@ -133,3 +133,12 @@ Optional **Controller navigation** supports a standard browser gamepad while the
 The Windows package includes a standalone multiresolution icon. The installer uses it for desktop/Start shortcuts and Installed Apps, and the desktop sets its application icon and Windows taskbar identity. On launch, a packaged app refreshes only existing Clip Maker shortcuts that point to that exact executable, so updates can repair old icons without recreating unrelated shortcuts.
 
 The Effects workflow is informed by [Adobe's documented clip-effect workflow](https://helpx.adobe.com/uk/premiere/desktop/add-video-effects/apply-video-effects/apply-effects.html) and inspected workspace declarations. Clip Maker uses its own source and rendering pipeline. Premiere's native Mercury implementation has not been recovered; REA native analysis requires a configured deep-analysis provider.
+
+
+### Additional tracks and linked clips
+
+Use **+ Video track**, **+ Audio track**, or **+ Caption track** to create a named, saved lane, including an empty one. Click its header to choose the destination for new media; rename it or remove an empty track in the Inspector. Drop source media or Windows Explorer files onto a track to place them at the drop time. Choose **Place on track** in a clip Inspector to move it to another lane of the same kind. Track controls apply to each lane.
+
+The main V1 edit stays continuous and determines sequence duration. Additional video and image tracks are timed layers within that duration; higher video tracks composite above lower tracks. Audio and caption tracks use the same duration. Add footage to V1 to extend the sequence before placing more layers. An edit supports 32 additional named tracks and up to 100 video/image layers and 100 sound pieces.
+
+Adding a video to an additional video track places its audio on a separate audio track and links the two pieces. Clicking either highlights both. Timing moves, handle trims, splits, copy/paste and removal affect the pair together; each split or pasted pair has its own link. **Unlink audio and video** makes the pieces independent. Standalone audio, images and silent videos select individually. The main V1/A1 source pieces remain linked to the same underlying edit. Undo restores track and clip changes. Copying the main edit with attached layers preserves the copied layers' links without linking them back to the originals.

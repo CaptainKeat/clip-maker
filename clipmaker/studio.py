@@ -166,7 +166,7 @@ def normalize_recipe(raw, media_list):
         text = str(c.get("text") or "").strip()[:300]
         if text and end > start:
             captions.append({"id":str(c.get("id") or uuid.uuid4().hex[:12])[:80], "text":text,"start":start,"end":end,
-                             "speaker":str(c.get("speaker") or "")[:60],"motion":normalize_motion(c.get("motion"),start,end)})
+                             "speaker":str(c.get("speaker") or "")[:60],"lane":str(c.get('lane') or '')[:80],"motion":normalize_motion(c.get("motion"),start,end)})
     def extras(kind):
         result = []
         for item in (raw.get(kind) or [])[:100]:
@@ -184,6 +184,7 @@ def normalize_recipe(raw, media_list):
                 "x":number(item.get("x"),50,0,100),"y":number(item.get("y"),50,0,100),"size":number(item.get("size"),.35,.05,2),
                 "gain_db":number(item.get("gain_db"),0,-36,12),"source_start":source_start,
                 "name":str(item.get('name') or '')[:80],"lane":str(item.get('lane') or '')[:80],
+                "link_id":str(item.get('link_id') or '')[:80],
                 "speaker_source":str(item.get('speaker_source') or '')[:160],
                 "audio_ordinal":ordinal if kind=='sounds' else 0,
                 "fade_in":number(item.get('fade_in'),0,0,length/2),"fade_out":number(item.get('fade_out'),0,0,length/2),
@@ -197,7 +198,8 @@ def normalize_recipe(raw, media_list):
         "resolution":int(raw.get("resolution")) if raw.get("resolution") in {720,1080,2160} else 1080,
         "quality":raw.get("quality") if raw.get("quality") in {"fast","balanced","high"} else "balanced",
         "editing":{"ripple":(raw.get('editing') or {}).get('ripple',True) is not False,"snap":(raw.get('editing') or {}).get('snap',True) is not False,
-                   "tracks":{str(key)[:90]:{**{flag:value.get(flag) is True for flag in ("locked","hidden","muted","solo")},"height":number(value.get("height"),52,38,180)} for key,value in ((raw.get("editing") or {}).get("tracks") or {}).items() if isinstance(value,dict) and (key in ("video","audio","captions","overlays","bookmarks") or str(key).startswith("sound:"))},
+                   "lanes":[{'id':str(t.get('id') or '')[:80],'name':str(t.get('name') or 'Track')[:80],'kind':t['kind']} for t in (raw.get('editing') or {}).get('lanes',[])[:32] if isinstance(t,dict) and t.get('kind') in {'video','audio','caption'} and t.get('id')],
+                   "tracks":{str(key)[:90]:{**{flag:value.get(flag) is True for flag in ("locked","hidden","muted","solo")},"height":number(value.get("height"),52,38,180)} for key,value in ((raw.get("editing") or {}).get("tracks") or {}).items() if isinstance(value,dict) and (key in ("video","audio","captions","overlays","bookmarks") or str(key).startswith(("sound:","video:","caption:")))},
                    "track_groups":{name:(raw.get('editing') or {}).get('track_groups',{}).get(name) is True for name in ('captions','effects','video','audio','bookmarks')}}}
 
 

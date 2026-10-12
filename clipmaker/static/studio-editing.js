@@ -14,21 +14,24 @@
   function cutTimed(r,a,b){
     const delta=b-a,map=t=>t<=a?t:t>=b?t-delta:a;
     r.captions=r.captions.filter(c=>!(c.start>=a&&c.end<=b)).map(c=>({...c,start:map(c.start),end:map(c.end),motion:motion(c.motion,map)})).filter(c=>c.end-c.start>.001);
+    const cutLinks=new Map();
     for(const type of ['sounds','overlays']){
       r[type]=r[type].flatMap(c=>{const start=c.time,end=start+c.duration,segments=[];
         if(start<a)segments.push([start,Math.min(a,end)]);if(end>b)segments.push([Math.max(start,b),end]);
-        return segments.filter(([x,y])=>y-x>.001).map(([x,y],i)=>({...c,id:i?id():c.id,time:map(x),duration:y-x,source_start:(c.source_start||0)+x-start,fade_in:x===start?(c.fade_in||0):0,fade_out:y===end?(c.fade_out||0):0}));
+        return segments.filter(([x,y])=>y-x>.001).map(([x,y],i)=>{let link=c.link_id;if(link){const key=link+'/'+x.toFixed(6)+'/'+y.toFixed(6);if(!cutLinks.has(key))cutLinks.set(key,id());link=cutLinks.get(key);}return {...c,id:i?id():c.id,...(link?{link_id:link}:{}),time:map(x),duration:y-x,source_start:(c.source_start||0)+x-start,fade_in:x===start?(c.fade_in||0):0,fade_out:y===end?(c.fade_out||0):0};});
       });
     }
     r.markers=r.markers.filter(m=>m.time<a||m.time>=b).map(m=>({...m,time:map(m.time)}));
   }
   function insertTimed(r,at,length){
+    const insertLinks=new Map();
     for(const type of ['captions','sounds','overlays'])r[type]=r[type].flatMap(c=>{
       const start=c.start??c.time,end=c.end??c.time+c.duration;
       if(start>=at)return [type==='captions'?{...c,start:start+length,end:end+length,motion:motion(c.motion,t=>t+length)}:{...c,time:start+length}];
       if(end<=at)return [c];
       if(type==='captions')return [{...c,end:at},{...clone(c),id:id(),start:at+length,end:end+length,motion:motion(c.motion,t=>t+length)}];
-      return [{...c,duration:at-start,fade_out:0},{...clone(c),id:id(),time:at+length,duration:end-at,source_start:(c.source_start||0)+at-start,fade_in:0}];
+      let link=c.link_id;if(link){if(!insertLinks.has(link))insertLinks.set(link,id());link=insertLinks.get(link);}
+      return [{...c,duration:at-start,fade_out:0},{...clone(c),id:id(),...(link?{link_id:link}:{}),time:at+length,duration:end-at,source_start:(c.source_start||0)+at-start,fade_in:0}];
     });
     r.markers=r.markers.map(m=>({...m,time:m.time>=at?m.time+length:m.time}));
   }
@@ -66,13 +69,14 @@
   }
   function paste(recipe,clipboard,at,ripple=true){
     if(!clipboard)throw new Error('Copy an item in Clip Maker first.');const r=clone(recipe);at=clamp(at,0,total(r));
-    const c=clone(clipboard.item);c.id=id();
+    const pastedLinks=new Map(),relink=c=>{if(c.link_id){if(!pastedLinks.has(c.link_id))pastedLinks.set(c.link_id,id());c.link_id=pastedLinks.get(c.link_id);}return c;};
+    const c=relink(clone(clipboard.item));c.id=id();
     if(clipboard.type==='clips'){
       let cursor=0,index=r.clips.length;
       for(let i=0;i<r.clips.length;i++){const end=cursor+duration(r.clips[i]);if(at<end-.0001){index=i;if(at>cursor+.0001){const original=r.clips[i];r.clips.splice(i,1,sliceClip(original,0,at-cursor),sliceClip(original,at-cursor,duration(original)));index=i+1;}break;}cursor=end;}
       if(r.clips.length>=500)throw new Error('The project has reached its 500-piece limit.');
       if(ripple)insertTimed(r,at,duration(c));r.clips.splice(index,0,c);
-      for(const [type,layers]of Object.entries(clipboard.layers||{}))for(const raw of layers){const v=clone(raw);v.id=id();if(type==='captions'){v.start+=at;v.end+=at;v.motion=motion(v.motion,t=>t+at);}else v.time+=at;r[type].push(v);}return {recipe:r,index};
+      for(const [type,layers]of Object.entries(clipboard.layers||{}))for(const raw of layers){const v=relink(clone(raw));v.id=id();if(type==='captions'){v.start+=at;v.end+=at;v.motion=motion(v.motion,t=>t+at);}else v.time+=at;r[type].push(v);}if(r.sounds.length>100||r.overlays.length>100)throw new Error('This edit has reached its 100-layer limit.');return {recipe:r,index};
     }
     if(at>=total(r)-.04)throw new Error('Move the playhead before the end to paste a layer.');
     if(clipboard.type==='captions'){const delta=at-c.start;c.end=Math.min(total(r),at+c.end-c.start);c.start=at;c.motion=motion(c.motion,t=>t+delta);}else{c.time=at;if(c.duration)c.duration=Math.min(c.duration,total(r)-at);}
@@ -80,16 +84,16 @@
   }
   function snap(time,points,zoom,enabled=true){if(!enabled)return {time,line:null};let best=null,distance=8/Math.max(.1,zoom);for(const p of points){const d=Math.abs(p-time);if(d<=distance){distance=d;best=p;}}return {time:best??time,line:best};}
   function envelope(item,age,length,prefix=''){const a=Math.min(item[prefix+'fade_in']||0,length/2),b=Math.min(item[prefix+'fade_out']||0,length/2);return clamp(Math.min(a?age/a:1,b?(length-age)/b:1),0,1);}
-  function crossfade(recipe,index,seconds){const r=clone(recipe),current=r.sounds[index];if(!current)throw new Error('Select a soundtrack.');const next=r.sounds.filter(s=>s!==current&&s.time>=current.time).sort((a,b)=>a.time-b.time)[0];if(!next)throw new Error('Add a following soundtrack first.');const f=clamp(seconds,.033,Math.min(current.duration/2,next.duration/2));current.fade_out=f;next.fade_in=f;next.time=current.time+current.duration-f;return r;}
+  function crossfade(recipe,index,seconds){const r=clone(recipe),current=r.sounds[index];if(!current)throw new Error('Select a soundtrack.');const next=r.sounds.filter(s=>s!==current&&s.time>=current.time).sort((a,b)=>a.time-b.time)[0];if(!next)throw new Error('Add a following soundtrack first.');if(current.link_id||next.link_id)throw new Error('Unlink the audio from its video before overlapping it with a crossfade.');const f=clamp(seconds,.033,Math.min(current.duration/2,next.duration/2));current.fade_out=f;next.fade_in=f;next.time=current.time+current.duration-f;return r;}
   function style(c,preset){const m=clone(c.motion||{enabled:true,x:50,y:85,keyframes:[]});for(const k of ['color','font','bold','size','rotation','effect'])m[k]=preset.motion[k];c.motion=m;c.speaker=preset.speaker||c.speaker||'';return c;}
   const track=(r,key)=>r.editing?.tracks?.[key]||{};
   const soundKey=s=>'sound:'+(s.lane||'Audio');
-  function audible(r,key){const tracks=r.editing?.tracks||{},active=new Set(['audio',...r.sounds.map(soundKey)]),solo=Object.entries(tracks).some(([k,v])=>active.has(k)&&v.solo);return !track(r,key).muted&&(!solo||!!track(r,key).solo);}
+  function audible(r,key){const tracks=r.editing?.tracks||{},active=new Set(['audio',...r.sounds.map(soundKey),...(r.editing?.lanes||[]).filter(t=>t.kind==='audio').map(t=>'sound:'+t.id)]),solo=Object.entries(tracks).some(([k,v])=>active.has(k)&&v.solo);return !track(r,key).muted&&(!solo||!!track(r,key).solo);}
   function assertUnlocked(before,after){
     const different=(a,b)=>JSON.stringify(a)!==JSON.stringify(b);
     for(const [key,state]of Object.entries(before.editing?.tracks||{})){
       if(!state.locked)continue;
-      const items=r=>key==='video'?r.clips:key==='audio'?r.clips.map(c=>[c.id,c.start,c.end,c.speed,c.freeze||0,c.audio,c.audio_fade_in||0,c.audio_fade_out||0]):key.startsWith('sound:')?r.sounds.filter(c=>soundKey(c)===key):r[key]||[];
+      const items=r=>key==='video'?r.clips:key==='audio'?r.clips.map(c=>[c.id,c.start,c.end,c.speed,c.freeze||0,c.audio,c.audio_fade_in||0,c.audio_fade_out||0]):key.startsWith('sound:')?r.sounds.filter(c=>soundKey(c)===key):key.startsWith('video:')?r.overlays.filter(c=>'video:'+(c.lane||'Overlays')===key):key.startsWith('caption:')?r.captions.filter(c=>'caption:'+(c.lane||'')===key):r[key]||[];
       if(different(items(before),items(after))){const error=new Error('Unlock '+(key.startsWith('sound:')?key.slice(6):key)+' before editing it. Ripple edits cannot move a locked track.');error.name='TrackLockedError';throw error;}
     }
   }
