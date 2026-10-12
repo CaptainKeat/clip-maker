@@ -1,5 +1,14 @@
-param([string]$Package=(Join-Path $PSScriptRoot 'Clip-Maker-v1.0.0-Windows.zip'),[switch]$NoLaunch)
+param([string]$Package="",[switch]$NoLaunch)
 $ErrorActionPreference='Stop'
+if(-not $Package){
+    $candidate=Get-ChildItem -LiteralPath $PSScriptRoot -Filter 'Clip-Maker-v*-Windows.zip' -File |
+        Where-Object {$_.Name -match '^Clip-Maker-v\d+\.\d+\.\d+-Windows\.zip$'} |
+        Sort-Object @{Expression={[version]($_.Name -replace '^Clip-Maker-v|\-Windows\.zip$','')};Descending=$true} | Select-Object -First 1
+    if(-not $candidate){throw 'Put the Windows ZIP beside this installer, or pass -Package with its path.'}
+    $Package=$candidate.FullName
+}
+if((Split-Path -Leaf $Package) -notmatch '^Clip-Maker-v(\d+\.\d+\.\d+)-Windows\.zip$'){throw 'Choose a versioned Clip Maker Windows package.'}
+$packageVersion=$Matches[1]
 $programs=[IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'Programs'))
 $target=[IO.Path]::GetFullPath((Join-Path $programs 'Clip Maker'))
 if(-not (Split-Path -Parent $target).Equals($programs,[StringComparison]::OrdinalIgnoreCase)){throw 'Invalid install path'}
@@ -22,7 +31,7 @@ foreach($folder in @([Environment]::GetFolderPath('Desktop'),[Environment]::GetF
 $key='HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\ClipMaker'
 New-Item -Path $key -Force | Out-Null
 $uninstaller=Join-Path $target 'Uninstall-Clip-Maker.ps1'
-$values=@{DisplayName='Clip Maker';DisplayVersion='1.0.0';Publisher='CaptainKeat';InstallLocation=$target;DisplayIcon=(Join-Path $target 'Clip Maker.exe');UninstallString='powershell.exe -NoProfile -ExecutionPolicy Bypass -File "'+$uninstaller+'"';NoModify=1;NoRepair=1}
+$values=@{DisplayName='Clip Maker';DisplayVersion=$packageVersion;Publisher='CaptainKeat';InstallLocation=$target;DisplayIcon=(Join-Path $target 'Clip Maker.exe');UninstallString='powershell.exe -NoProfile -ExecutionPolicy Bypass -File "'+$uninstaller+'"';NoModify=1;NoRepair=1}
 foreach($name in $values.Keys){Set-ItemProperty -Path $key -Name $name -Value $values[$name]}
 Write-Output "Installed Clip Maker: $target"
 Write-Output "Installation files are preserved at $attempt"
